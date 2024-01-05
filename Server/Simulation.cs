@@ -9,7 +9,7 @@ namespace Simulation
 
     // long due to floating point determinism stuff - would be fixed point probably
     // Stand-in struct for all game entities.
-    struct Player
+    public struct Player
     {
         public long X;
         public long Y;
@@ -41,7 +41,7 @@ namespace Simulation
 
     // In reality, there would have to be more than one command
     // This is a simple move command
-    struct Command
+    public struct Command
     {
         public int PlayerId;
         public long TargetX;
@@ -52,7 +52,7 @@ namespace Simulation
 
 
 
-    class Simulation
+    public class Simulation
     {
         // Per turn!
         private readonly long PlayerSpeed = 1000;
