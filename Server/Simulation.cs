@@ -58,8 +58,8 @@ namespace Simulation
         private readonly long PlayerSpeed = 1000;
 
 
-        private readonly int turnSpeedMs;
-        private readonly int playerCount;
+        public readonly int turnSpeedMs;
+        public readonly int playerCount;
         // State of last frame (stored for interpolation purposes)
         public SimulationState lastState;
         // State of this frame
