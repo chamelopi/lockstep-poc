@@ -1,3 +1,4 @@
+
 namespace Simulation
 {
     // long due to floating point determinism stuff - would be fixed point probably
@@ -46,6 +47,27 @@ namespace Simulation
 
             var other = (Player)obj;
             return X == other.X && Y == other.Y && VelocityX == other.VelocityX && VelocityY == other.VelocityY && Moving == other.Moving;
+        }
+
+        // TODO: Player needs to remember his target to stop moving at some point
+        public Player Update()
+        {
+            if (this.Moving)
+            {
+                var updatedPlayer = new Player
+                {
+                    X = this.X + this.VelocityX,
+                    Y = this.Y + this.VelocityY,
+                    VelocityX = this.VelocityX,
+                    VelocityY = this.VelocityY,
+                    Moving = this.Moving,
+                };
+                return updatedPlayer;
+            }
+            else
+            {
+                return this;
+            }
         }
 
         public static bool operator ==(Player left, Player right)

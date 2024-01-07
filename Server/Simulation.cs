@@ -6,8 +6,6 @@ namespace Simulation
     using SimulationState = List<Player>;
 
 
-
-
     public class Simulation
     {
         // Per turn!
@@ -78,20 +76,7 @@ namespace Simulation
             for (int i = 0; i < this.currentState.Count; i++)
             {
                 var player = this.currentState[i];
-                // TODO: Refactor to update function
-                // TODO: Player needs to remember his target to stop moving at some point
-                if (player.Moving)
-                {
-                    var updatedPlayer = new Player
-                    {
-                        X = player.X + player.VelocityX,
-                        Y = player.Y + player.VelocityY,
-                        VelocityX = player.VelocityX,
-                        VelocityY = player.VelocityY,
-                        Moving = player.Moving,
-                    };
-                    this.currentState[i] = updatedPlayer;
-                }
+                this.currentState[i] = player.Update();
             }
 
             // Advance to next frame
@@ -175,7 +160,7 @@ namespace Simulation
             {
                 // Copy last frame's state into the simulation
                 currentState = new SimulationState(this.lastState),
-                currentTurn = this.currentTurn-1,
+                currentTurn = this.currentTurn - 1,
             };
             determinismCheck.AddCommands(this.lastFrameActions);
 

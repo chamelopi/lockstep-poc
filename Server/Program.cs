@@ -12,12 +12,22 @@ namespace Server
         static readonly int TurnSpeedMs = 100;
         static readonly int PlayerCount = 2;
 
-
         static long lastFrame = 0;
 
         public static long GetTicks()
         {
             return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
+
+        private static List<Command> GetPresetCommands() {
+            return new List<Command>(){
+                new() { PlayerId = 0, TargetTurn = 2, TargetX = 100000, TargetY = 100000 },
+                new() { PlayerId = 1, TargetTurn = 10, TargetX = -50000, TargetY = 50000 },
+                new() { PlayerId = 1, TargetTurn = 30, TargetX = -50000, TargetY = -50000 },
+                new() { PlayerId = 1, TargetTurn = 50, TargetX = 50000, TargetY = -50000 },
+                new() { PlayerId = 1, TargetTurn = 70, TargetX = 50000, TargetY = 50000 },
+                new() { PlayerId = 0, TargetTurn = 50, TargetX = 50000, TargetY = 50000 }
+            };
         }
 
         public static void Main(string[] args)
@@ -30,14 +40,7 @@ namespace Server
 
             var sim = new Simulation.Simulation(TurnSpeedMs, PlayerCount);
             // These could come from the player, from the network, or from a file (replay)
-            var commands = new List<Command>(){
-                new() { PlayerId = 0, TargetTurn = 2, TargetX = 100000, TargetY = 100000 },
-                new() { PlayerId = 1, TargetTurn = 10, TargetX = -50000, TargetY = 50000 },
-                new() { PlayerId = 1, TargetTurn = 30, TargetX = -50000, TargetY = -50000 },
-                new() { PlayerId = 1, TargetTurn = 50, TargetX = 50000, TargetY = -50000 },
-                new() { PlayerId = 1, TargetTurn = 70, TargetX = 50000, TargetY = 50000 },
-                new() { PlayerId = 0, TargetTurn = 50, TargetX = 50000, TargetY = 50000 }
-            };
+            var commands = GetPresetCommands();
             sim.AddCommands(commands);
 
             const int MaxTurns = 100;
@@ -65,7 +68,7 @@ namespace Server
             Raylib.CloseWindow();
         }
 
-        static float RunSimulation(Simulation.Simulation sim)
+        static void RunSimulation(Simulation.Simulation sim)
         {
             // TODO: Build a clock abstraction for this?
             long timeSinceLastStep = 0;
@@ -84,10 +87,6 @@ namespace Server
             // We might disable this for a release build
             // FIXME: Does not check correctly
             //sim.CheckDeterminism();
-
-            // How far into the new frame are we?
-            var dt = GetTicks() - lastFrame;
-            return dt;
         }
 
         static void Render(Simulation.Simulation sim, Camera3D camera)
@@ -109,7 +108,7 @@ namespace Server
 
             Raylib.EndMode3D();
 
-            Raylib.DrawText($"Time since last step: ", 10, 10, 24, Color.BLACK);
+            Raylib.DrawText($"Time since last sim step: ", 10, 10, 24, Color.BLACK);
             Raylib.DrawRectangle(360, 8, Math.Min((int)delta * 3, 500), 20, Color.DARKGREEN);
             Raylib.DrawText($"Current simulation step: {sim.currentTurn}", 10, 40, 24, Color.BLACK);
             Raylib.DrawText($"Ms per simulation step: {sim.turnSpeedMs}", 10, 70, 24, Color.BLACK);
@@ -119,15 +118,12 @@ namespace Server
 
         static Color GetColor(int playerId)
         {
-            switch (playerId)
+            return playerId switch
             {
-                case 0:
-                    return Color.RED;
-                case 1:
-                    return Color.BLUE;
-                default:
-                    throw new ArgumentException("Color not defined for player " + playerId);
-            }
+                0 => Color.RED,
+                1 => Color.BLUE,
+                _ => throw new ArgumentException("Color not defined for player " + playerId),
+            };
         }
     }
 }
