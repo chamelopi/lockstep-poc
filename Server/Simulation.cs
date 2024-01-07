@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Security;
+using UnityEngine.UIElements;
 
 namespace Simulation
 {
@@ -40,13 +41,28 @@ namespace Simulation
             this.currentTurn = 0;
 
             this.lastState = new(playerCount);
-            this.twoStepsAgoState = new(playerCount);
             for (int i = 0; i < playerCount; i++)
             {
                 this.lastState.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
-                this.twoStepsAgoState.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
             }
             this.currentState = new(this.lastState);
+            this.twoStepsAgoState = new(this.lastState);
+            this.commandQueue = new();
+            this.allCommands = new();
+            this.lastFrameActions = new();
+            this.lastTurnTimestamp = GetTicks();
+        }
+
+        public void Reset() {
+            this.currentTurn = 0;
+            this.currentState = new(playerCount);
+            for (int i = 0; i < playerCount; i++)
+            {
+                this.currentState.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
+            }
+            this.lastState = new(currentState);
+            this.twoStepsAgoState = new(currentState);
+
             this.commandQueue = new();
             this.allCommands = new();
             this.lastFrameActions = new();
@@ -236,6 +252,50 @@ namespace Simulation
         public float GetTimeSinceLastStep()
         {
             return GetTicks() - lastTurnTimestamp;
+        }
+
+        public void SaveReplay(string filename)
+        {
+            using(var stream = new StreamWriter(filename)) {
+                foreach(var cmd in allCommands) {
+                    stream.WriteLine(cmd.PlayerId + "," + cmd.TargetX + "," + cmd.TargetY + "," + cmd.TargetTurn);
+                }
+            }
+            Console.WriteLine("Successfully saved to replay file " + filename);
+        }
+
+        public void LoadReplay(string filename)
+        {
+            var commands = new List<Command>();
+            using(var stream = new StreamReader(filename)) {
+                var lineCounter = 1;
+
+                while(!stream.EndOfStream) {
+                    var line = stream.ReadLine();
+                    
+                    if (line != null) {
+                        var parts = line.Split(",");
+                        if (parts.Length != 4) {
+                            throw new ArgumentException(lineCounter + ": Incorrect number of CSV columns: " + parts.Length);
+                        }
+                        // TODO: Refactor into (de-)serialize methods?
+                        var command = new Command { PlayerId = int.Parse(parts[0]), TargetX = long.Parse(parts[1]), TargetY = long.Parse(parts[2]), TargetTurn = int.Parse(parts[3]) };
+                        if (command.TargetTurn < 1) {
+                            throw new ArgumentException(lineCounter + ": Cannot have command before turn 1!");
+                        }
+                        commands.Add(command);
+
+                        lineCounter++;
+                    }
+                }
+            }
+            this.Reset();
+            this.AddCommands(commands);
+            for(int i = 0; i < commandQueue.Count; i++) {
+                Console.WriteLine(commandQueue.UnorderedItems.ElementAt(i).ToString());
+            }
+
+            Console.WriteLine("Successfully loaded from replay file " + filename);
         }
     }
 }

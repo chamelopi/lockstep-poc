@@ -34,9 +34,15 @@ namespace Server
             var camera = new Camera3D(new Vector3(50.0f, 50.0f, 50.0f), Vector3.Zero, Vector3.UnitY, 45, CameraProjection.CAMERA_PERSPECTIVE);
 
             var sim = new Simulation.Simulation(InitialTurnSpeedMs, PlayerCount);
-            // These could come from the player, from the network, or from a file (replay)
-            var commands = GetPresetCommands();
-            sim.AddCommands(commands);
+
+            if (args.Length == 0) {
+                // These could come from the player, from the network, or from a file (replay)
+                var commands = GetPresetCommands();
+                sim.AddCommands(commands);
+            } else if (args.Length == 1) {
+                Console.WriteLine("Loading replay from " + args[0]);
+                sim.LoadReplay(args[0]);
+            }
 
             while (!Raylib.WindowShouldClose())
             {
@@ -61,6 +67,10 @@ namespace Server
                 }
                 if (Raylib.IsKeyPressed(KeyboardKey.KEY_PAGE_DOWN)) {
                     sim.turnSpeedMs += TurnSpeedIncrement;
+                }
+
+                if (Raylib.IsKeyPressed(KeyboardKey.KEY_S)) {
+                    sim.SaveReplay("replay-" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".csv");
                 }
 
                 Render(sim, camera);
