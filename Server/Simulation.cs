@@ -12,9 +12,11 @@ namespace Simulation
         // Per turn!
         private readonly long PlayerSpeed = 10000;
 
-
-        public readonly int turnSpeedMs;
+        // By changing this, we can speed up or slow down the simulation.
+        // Can be used to control game speed, or to fast-forward in replays or spectator mode
+        public int turnSpeedMs;
         public readonly int playerCount;
+
         // State of the current simulation step
         public SimulationState currentState;
         // State of last step (stored for interpolation purposes)
@@ -22,7 +24,10 @@ namespace Simulation
 
         // State of two steps ago (stored for interpolation purposes)
         public SimulationState twoStepsAgoState;
+
+        // The current simulation turn. Automatically incremented by calling Step().
         public int currentTurn;
+        public long lastTurnTimestamp;
 
         public PriorityQueue<Command, int> commandQueue;
         public List<Command> allCommands;
@@ -45,6 +50,7 @@ namespace Simulation
             this.commandQueue = new();
             this.allCommands = new();
             this.lastFrameActions = new();
+            this.lastTurnTimestamp = GetTicks();
         }
 
         public void AddCommand(Command command)
@@ -60,6 +66,25 @@ namespace Simulation
                 commandQueue.Enqueue(cmd, cmd.TargetTurn);
             }
             allCommands.AddRange(commands);
+        }
+
+        public void RunSimulation() {
+            // TODO: Build a clock abstraction for this?
+            long timeSinceLastStep = 0;
+
+            // Fixed time step
+            var startFrame = GetTicks();
+            timeSinceLastStep += startFrame - lastTurnTimestamp;
+
+            while (timeSinceLastStep > turnSpeedMs)
+            {
+                timeSinceLastStep -= turnSpeedMs;
+                lastTurnTimestamp += turnSpeedMs;
+                Step();
+
+                // We might disable this for a release build
+                CheckDeterminism();
+            }
         }
 
         public void Step()
@@ -201,6 +226,16 @@ namespace Simulation
                     throw new SimulationNotDeterministicException($"Entity {i} does not match in both simulations! Real sim - {objA} | Check sim - {objB}");
                 }
             }
+        }
+
+        public static long GetTicks()
+        {
+            return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
+
+        public float GetTimeSinceLastStep()
+        {
+            return GetTicks() - lastTurnTimestamp;
         }
     }
 }

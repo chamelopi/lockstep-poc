@@ -9,15 +9,10 @@ namespace Server
     class Server
     {
         static readonly float FixedPointRes = 10000f;
-        static readonly int TurnSpeedMs = 100;
+        static readonly int InitialTurnSpeedMs = 100;
+        static readonly int TurnSpeedIncrement = 10;
         static readonly int PlayerCount = 2;
-
-        static long lastFrame = 0;
-
-        public static long GetTicks()
-        {
-            return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        }
+        static readonly int MaxTurns = 100;
 
         private static List<Command> GetPresetCommands() {
             return new List<Command>(){
@@ -38,19 +33,16 @@ namespace Server
             Raylib.InitWindow(1280, 1024, "Simulation");
             var camera = new Camera3D(new Vector3(50.0f, 50.0f, 50.0f), Vector3.Zero, Vector3.UnitY, 45, CameraProjection.CAMERA_PERSPECTIVE);
 
-            var sim = new Simulation.Simulation(TurnSpeedMs, PlayerCount);
+            var sim = new Simulation.Simulation(InitialTurnSpeedMs, PlayerCount);
             // These could come from the player, from the network, or from a file (replay)
             var commands = GetPresetCommands();
             sim.AddCommands(commands);
-
-            const int MaxTurns = 100;
-            lastFrame = GetTicks();
 
             while (!Raylib.WindowShouldClose())
             {
                 if (sim.currentTurn < MaxTurns)
                 {
-                    RunSimulation(sim);
+                    sim.RunSimulation();
                 }
                 else
                 {
@@ -62,36 +54,23 @@ namespace Server
                     }
                 }
 
+                // Allow control of simulation speed. Simulation speed goes UP when turn duration goes DOWN
+                // (a bit counter-intuitive)
+                if (Raylib.IsKeyPressed(KeyboardKey.KEY_PAGE_UP)) {
+                    sim.turnSpeedMs -= TurnSpeedIncrement;
+                }
+                if (Raylib.IsKeyPressed(KeyboardKey.KEY_PAGE_DOWN)) {
+                    sim.turnSpeedMs += TurnSpeedIncrement;
+                }
+
                 Render(sim, camera);
             }
 
             Raylib.CloseWindow();
         }
-
-        // TODO: Refactor this into the simulation?
-        static void RunSimulation(Simulation.Simulation sim)
-        {
-            // TODO: Build a clock abstraction for this?
-            long timeSinceLastStep = 0;
-
-            // Fixed time step
-            var startFrame = GetTicks();
-            timeSinceLastStep += startFrame - lastFrame;
-
-            while (timeSinceLastStep > sim.turnSpeedMs)
-            {
-                timeSinceLastStep -= sim.turnSpeedMs;
-                lastFrame += sim.turnSpeedMs;
-                sim.Step();
-
-                // We might disable this for a release build
-                sim.CheckDeterminism();
-            }
-        }
-
         static void Render(Simulation.Simulation sim, Camera3D camera)
         {
-            float delta = GetTicks() - lastFrame;
+            float delta = sim.GetTimeSinceLastStep();
 
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Color.LIGHTGRAY);
@@ -111,8 +90,8 @@ namespace Server
             Raylib.EndMode3D();
 
             Raylib.DrawText($"Time since last sim step: ", 10, 10, 24, Color.BLACK);
-            Raylib.DrawRectangle(360, 8, Math.Min((int)delta * 3, 500), 20, Color.DARKGREEN);
-            Raylib.DrawText($"Current simulation step: {sim.currentTurn}", 10, 40, 24, Color.BLACK);
+            Raylib.DrawRectangle(360, 12, Math.Min((int)delta * 3, 500), 20, Color.DARKGREEN);
+            Raylib.DrawText($"Current simulation step: {sim.currentTurn}/{MaxTurns}", 10, 40, 24, Color.BLACK);
             Raylib.DrawText($"Ms per simulation step: {sim.turnSpeedMs}", 10, 70, 24, Color.BLACK);
 
             Raylib.EndDrawing();
