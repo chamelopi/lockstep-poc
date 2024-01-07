@@ -22,6 +22,8 @@ namespace Simulation
             return $"Player: P = {X}/{Y}, V = {VelocityX}/{VelocityY}, M = {Moving}";
         }
 
+        
+
         // TODO: For rendering, we would probably have to calculate floats back from the fixed point variables at this point (?)
         public static Player Interpolate(Player a, Player b, float alpha) {
             return new Player {
@@ -36,6 +38,29 @@ namespace Simulation
 
         static long Lerp(long a, long b, float alpha) {
             return (long) ((float)a * alpha + (float)b * (1 - alpha));
+        }
+
+        // Equality checks to allow us to easily check for differences
+        // TODO: It might be interesting later to find out *which* property was not equal
+        public override readonly bool Equals(object? obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            var other = (Player) obj;
+            return X == other.X && Y == other.Y && VelocityX == other.VelocityX && VelocityY == other.VelocityY && Moving == other.Moving;
+        }
+
+        public static bool operator ==(Player left, Player right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Player left, Player right)
+        {
+            return !(left == right);
         }
     }
 
@@ -67,6 +92,7 @@ namespace Simulation
         public int currentTurn;
 
         public PriorityQueue<Command, int> commandQueue;
+        public List<Command> allCommands;
 
         public Simulation(int turnSpeedMs, int playerCount)
         {
@@ -80,11 +106,20 @@ namespace Simulation
             }
             this.currentState = new(this.lastState);
             this.commandQueue = new();
+            this.allCommands = new();
         }
 
         public void AddCommand(Command command)
         {
             commandQueue.Enqueue(command, command.TargetTurn);
+            allCommands.Add(command);
+        }
+
+        public void AddCommands(IEnumerable<Command> commands) {
+            foreach(var cmd in commands) {
+                commandQueue.Enqueue(cmd, cmd.TargetTurn);
+            }
+            allCommands.AddRange(commands);
         }
 
         public void Step()
@@ -157,6 +192,36 @@ namespace Simulation
             }
 
             return interpolatedState;
+        }
+
+
+        public void CheckDeterminism()
+        {
+            var stateA = this.currentState;
+            // Run the simulation again, with the same inputs. It should yield exactly the same results.
+            var determinismCheck = new Simulation(this.turnSpeedMs, this.playerCount);
+            determinismCheck.AddCommands(this.allCommands);
+
+            // Step until we reach the other simulations turn
+            while(determinismCheck.currentTurn < this.currentTurn) {
+                determinismCheck.Step();
+            }
+            var stateB = determinismCheck.currentState;
+
+            // TODO: To detect errors even earlier, we might want to run this *in parallel* with the real simulation
+            // and check real-time.
+            if (stateA.Count != stateB.Count) {
+                throw new SimulationNotDeterministicException($"Number of entities in state differs: StateA - {stateA.Count} | StateB - {stateB.Count}");
+            }
+
+            for (int i = 0; i < stateA.Count; i++) {
+                var objA = stateA[i];
+                var objB = stateB[i];
+
+                if (objA != objB) {
+                    throw new SimulationNotDeterministicException($"Entity {i} does not match in both simulations! StateA - {objA} | StateB - {objB}");
+                }
+            }
         }
     }
 }

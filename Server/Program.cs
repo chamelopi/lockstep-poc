@@ -14,10 +14,17 @@ namespace Server {
 
 
             var sim = new Simulation.Simulation(turnSpeedMs: 200, playerCount: 2);
-            
-            sim.AddCommand(new Command { PlayerId = 0, TargetTurn = 2, TargetX = 10000, TargetY = 10000 });
-            sim.AddCommand(new Command { PlayerId = 1, TargetTurn = 10, TargetX = -5000, TargetY = 10000 });
-            sim.AddCommand(new Command { PlayerId = 0, TargetTurn = 50, TargetX = 5000, TargetY = 5000 });
+            // These could come from the player, from the network, or from a file (replay)
+            var commands = new List<Command>(){
+                new Command { PlayerId = 0, TargetTurn = 2, TargetX = 10000, TargetY = 10000 },
+                new Command { PlayerId = 1, TargetTurn = 10, TargetX = -5000, TargetY = 10000 },
+                new Command { PlayerId = 0, TargetTurn = 50, TargetX = 5000, TargetY = 5000 }
+            };
+            sim.AddCommands(commands);
+
+            // Run the simulation a second time to compare results later
+            var determinismCheck = new Simulation.Simulation(turnSpeedMs: 200, playerCount: 2);
+            determinismCheck.AddCommands(commands);
 
             const int MaxTurns = 100;
             long beginOfSim = GetTicks();
@@ -45,6 +52,9 @@ namespace Server {
 
             var endOfSim = GetTicks();
             Console.WriteLine($"Simulating {MaxTurns} turns with speed {sim.turnSpeedMs}ms per turn took {endOfSim - beginOfSim}ms");
+
+            sim.CheckDeterminism();
+            Console.WriteLine("If you can read this, we're good!");
         }
     }
 }

@@ -9,4 +9,5 @@ see https://docs.unity3d.com/Manual/UsingDLL.html
    - https://forum.unity.com/threads/unable-to-load-attribute-info-unloading-broken-assembly-help-appreciated.1445707/
 3. Do "Import Asset" in unity editor, drag&drop does not work for me for some reason
 4. ???
-5. Profit
+5. Does not work :(
+
