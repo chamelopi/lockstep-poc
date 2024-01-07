@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Security;
-using UnityEngine.UIElements;
 
 namespace Simulation
 {
@@ -33,6 +32,7 @@ namespace Simulation
         public PriorityQueue<Command, int> commandQueue;
         public List<Command> allCommands;
         public List<Command> lastFrameActions;
+        public bool isPaused;
 
         public Simulation(int turnSpeedMs, int playerCount)
         {
@@ -53,7 +53,8 @@ namespace Simulation
             this.lastTurnTimestamp = GetTicks();
         }
 
-        public void Reset() {
+        public void Reset()
+        {
             this.currentTurn = 0;
             this.currentState = new(playerCount);
             for (int i = 0; i < playerCount; i++)
@@ -84,7 +85,13 @@ namespace Simulation
             allCommands.AddRange(commands);
         }
 
-        public void RunSimulation() {
+        public void RunSimulation()
+        {
+            if (isPaused)
+            {
+                return;
+            }
+
             // TODO: Build a clock abstraction for this?
             long timeSinceLastStep = 0;
 
@@ -120,7 +127,7 @@ namespace Simulation
                 lastFrameActions.Add(command);
                 HandleCommand(command);
             }
-            
+
             // Update state
             for (int i = 0; i < this.currentState.Count; i++)
             {
@@ -256,8 +263,10 @@ namespace Simulation
 
         public void SaveReplay(string filename)
         {
-            using(var stream = new StreamWriter(filename)) {
-                foreach(var cmd in allCommands) {
+            using (var stream = new StreamWriter(filename))
+            {
+                foreach (var cmd in allCommands)
+                {
                     stream.WriteLine(cmd.PlayerId + "," + cmd.TargetX + "," + cmd.TargetY + "," + cmd.TargetTurn);
                 }
             }
@@ -267,20 +276,25 @@ namespace Simulation
         public void LoadReplay(string filename)
         {
             var commands = new List<Command>();
-            using(var stream = new StreamReader(filename)) {
+            using (var stream = new StreamReader(filename))
+            {
                 var lineCounter = 1;
 
-                while(!stream.EndOfStream) {
+                while (!stream.EndOfStream)
+                {
                     var line = stream.ReadLine();
-                    
-                    if (line != null) {
+
+                    if (line != null)
+                    {
                         var parts = line.Split(",");
-                        if (parts.Length != 4) {
+                        if (parts.Length != 4)
+                        {
                             throw new ArgumentException(lineCounter + ": Incorrect number of CSV columns: " + parts.Length);
                         }
                         // TODO: Refactor into (de-)serialize methods?
                         var command = new Command { PlayerId = int.Parse(parts[0]), TargetX = long.Parse(parts[1]), TargetY = long.Parse(parts[2]), TargetTurn = int.Parse(parts[3]) };
-                        if (command.TargetTurn < 1) {
+                        if (command.TargetTurn < 1)
+                        {
                             throw new ArgumentException(lineCounter + ": Cannot have command before turn 1!");
                         }
                         commands.Add(command);
@@ -291,11 +305,21 @@ namespace Simulation
             }
             this.Reset();
             this.AddCommands(commands);
-            for(int i = 0; i < commandQueue.Count; i++) {
+            for (int i = 0; i < commandQueue.Count; i++)
+            {
                 Console.WriteLine(commandQueue.UnorderedItems.ElementAt(i).ToString());
             }
 
             Console.WriteLine("Successfully loaded from replay file " + filename);
+        }
+
+        internal void TogglePause()
+        {
+            isPaused = !isPaused;
+            if (!isPaused)
+            {
+                lastTurnTimestamp = GetTicks();
+            }
         }
     }
 }

@@ -14,7 +14,12 @@ namespace Server
         static readonly int PlayerCount = 2;
         static readonly int MaxTurns = 100;
 
-        private static List<Command> GetPresetCommands() {
+        static readonly int GroundSize = 80;
+
+        static int uiPlayerID = 0;
+
+        private static List<Command> GetPresetCommands()
+        {
             return new List<Command>(){
                 new() { PlayerId = 0, TargetTurn = 2, TargetX = 100000, TargetY = 100000 },
                 new() { PlayerId = 1, TargetTurn = 10, TargetX = -50000, TargetY = 50000 },
@@ -23,6 +28,15 @@ namespace Server
                 new() { PlayerId = 1, TargetTurn = 70, TargetX = 50000, TargetY = 50000 },
                 new() { PlayerId = 0, TargetTurn = 50, TargetX = 50000, TargetY = 50000 }
             };
+        }
+
+        private static RayCollision CollideGround(Camera3D cam)
+        {
+            return Raylib.GetRayCollisionQuad(Raylib.GetMouseRay(Raylib.GetMousePosition(), cam),
+                new Vector3(GroundSize / 2, -1, GroundSize / 2),
+                new Vector3(-GroundSize / 2, -1, GroundSize / 2),
+                new Vector3(GroundSize / 2, -1, -GroundSize / 2),
+                new Vector3(-GroundSize / 2, -1, -GroundSize / 2));
         }
 
         public static void Main(string[] args)
@@ -35,42 +49,68 @@ namespace Server
 
             var sim = new Simulation.Simulation(InitialTurnSpeedMs, PlayerCount);
 
-            if (args.Length == 0) {
+            // TODO: Use proper argparser
+            if (args.Length == 0)
+            {
                 // These could come from the player, from the network, or from a file (replay)
-                var commands = GetPresetCommands();
-                sim.AddCommands(commands);
-            } else if (args.Length == 1) {
+                //var commands = GetPresetCommands();
+                //sim.AddCommands(commands);
+            }
+            else if (args.Length == 1)
+            {
                 Console.WriteLine("Loading replay from " + args[0]);
                 sim.LoadReplay(args[0]);
             }
 
             while (!Raylib.WindowShouldClose())
             {
-                if (sim.currentTurn < MaxTurns)
+                sim.RunSimulation();
+
+
+                if (Raylib.IsKeyPressed(KeyboardKey.KEY_F))
                 {
-                    sim.RunSimulation();
-                }
-                else
-                {
-                    if (Raylib.IsKeyPressed(KeyboardKey.KEY_F))
-                    {
-                        Raylib.DrawText("Running full determinism check....", 10, 10, 30, Color.BLACK);
-                        sim.CheckFullDeterminism();
-                        Console.WriteLine("Simulation re-simulated successfully, we should be deterministic!");
-                    }
+                    Raylib.DrawText("Running full determinism check....", 10, 10, 30, Color.BLACK);
+                    sim.CheckFullDeterminism();
+                    Console.WriteLine("Simulation re-simulated successfully, we should be deterministic!");
                 }
 
                 // Allow control of simulation speed. Simulation speed goes UP when turn duration goes DOWN
                 // (a bit counter-intuitive)
-                if (Raylib.IsKeyPressed(KeyboardKey.KEY_PAGE_UP)) {
+                if (Raylib.IsKeyPressed(KeyboardKey.KEY_PAGE_UP))
+                {
                     sim.turnSpeedMs -= TurnSpeedIncrement;
                 }
-                if (Raylib.IsKeyPressed(KeyboardKey.KEY_PAGE_DOWN)) {
+                if (Raylib.IsKeyPressed(KeyboardKey.KEY_PAGE_DOWN))
+                {
                     sim.turnSpeedMs += TurnSpeedIncrement;
                 }
 
-                if (Raylib.IsKeyPressed(KeyboardKey.KEY_S)) {
+                if (Raylib.IsKeyPressed(KeyboardKey.KEY_S))
+                {
                     sim.SaveReplay("replay-" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".csv");
+                }
+                if (Raylib.IsKeyPressed(KeyboardKey.KEY_P))
+                {
+                    sim.TogglePause();
+                }
+
+                if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT) && !sim.isPaused)
+                {
+                    var coll = CollideGround(camera);
+                    if (coll.Hit)
+                    {
+                        var cmd = new Command
+                        {
+                            PlayerId = uiPlayerID,
+                            TargetX = (long)(coll.Point.X * FixedPointRes),
+                            TargetY = (long)(coll.Point.Z * FixedPointRes),
+                            // Queue up commands for two turns in the future!
+                            // This allows the netcode time to transmit commands between players
+                            TargetTurn = sim.currentTurn + 2,
+                        };
+                        sim.AddCommand(cmd);
+                        Console.WriteLine($"New command: move to {cmd.TargetX}/{cmd.TargetY}");
+                    }
                 }
 
                 Render(sim, camera);
@@ -86,9 +126,10 @@ namespace Server
             Raylib.ClearBackground(Color.LIGHTGRAY);
             Raylib.BeginMode3D(camera);
 
-            Raylib.DrawPlane(new Vector3(0, -1, 0), new Vector2(80, 80), Color.GREEN);
+            Raylib.DrawPlane(new Vector3(0, -1, 0), new Vector2(GroundSize, GroundSize), Color.GREEN);
 
-            var interpolatedState = sim.Interpolate(delta);
+            // TODO: This is not smooth, we should maybe store the delta when pausing?
+            var interpolatedState = sim.isPaused ? sim.currentState : sim.Interpolate(delta);
             int i = 0;
             foreach (var obj in interpolatedState)
             {
