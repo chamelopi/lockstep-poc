@@ -33,10 +33,10 @@ namespace Server
         private static RayCollision CollideGround(Camera3D cam)
         {
             return Raylib.GetRayCollisionQuad(Raylib.GetMouseRay(Raylib.GetMousePosition(), cam),
-                new Vector3(GroundSize / 2, -1, GroundSize / 2),
+                new Vector3(-GroundSize / 2, -1, -GroundSize / 2),
                 new Vector3(-GroundSize / 2, -1, GroundSize / 2),
-                new Vector3(GroundSize / 2, -1, -GroundSize / 2),
-                new Vector3(-GroundSize / 2, -1, -GroundSize / 2));
+                new Vector3(GroundSize / 2, -1, GroundSize / 2),
+                new Vector3(GroundSize / 2, -1, -GroundSize / 2));
         }
 
         public static void Main(string[] args)
