@@ -3,32 +3,24 @@ using System.Xml.Serialization;
 using Simulation;
 using System.Numerics;
 using Raylib_cs;
+using System.CommandLine;
 
 namespace Server
 {
     class Server
     {
         static readonly float FixedPointRes = 10000f;
+        static readonly ushort Port = 1337;
         static readonly int InitialTurnSpeedMs = 100;
         static readonly int TurnSpeedIncrement = 10;
         static readonly int PlayerCount = 2;
         static readonly int MaxTurns = 100;
 
         static readonly int GroundSize = 80;
+        
 
         static int uiPlayerID = 0;
 
-        private static List<Command> GetPresetCommands()
-        {
-            return new List<Command>(){
-                new() { PlayerId = 0, TargetTurn = 2, TargetX = 100000, TargetY = 100000 },
-                new() { PlayerId = 1, TargetTurn = 10, TargetX = -50000, TargetY = 50000 },
-                new() { PlayerId = 1, TargetTurn = 30, TargetX = -50000, TargetY = -50000 },
-                new() { PlayerId = 1, TargetTurn = 50, TargetX = 50000, TargetY = -50000 },
-                new() { PlayerId = 1, TargetTurn = 70, TargetX = 50000, TargetY = 50000 },
-                new() { PlayerId = 0, TargetTurn = 50, TargetX = 50000, TargetY = 50000 }
-            };
-        }
 
         private static RayCollision CollideGround(Camera3D cam)
         {
@@ -39,7 +31,21 @@ namespace Server
                 new Vector3(GroundSize / 2, -1, -GroundSize / 2));
         }
 
-        public static void Main(string[] args)
+        // Entrypoint, using System.CommandLine package for arg parsing
+        static async Task<int> Main(string[] args) {
+            var replayOption = new Option<string?>("--replay", "Replay file to load on startup, if desired");
+            var hostOption = new Option<string?>("--host", "Acts as a network client and connects to the specified host");
+            var serverOption = new Option<bool>("--server", () => false, "Acts as a network server");
+            var rootCommand = new RootCommand("Run lockstep simulation");
+            rootCommand.AddOption(replayOption);
+            rootCommand.AddOption(hostOption);
+            rootCommand.AddOption(serverOption);
+            rootCommand.SetHandler((replay, host, server) => Run(replay, server, host), replayOption, hostOption, serverOption);
+
+            return await rootCommand.InvokeAsync(args);
+        }
+
+        public static void Run(string? replay, bool server, string? host)
         {
             // TODO: Implement ENet Server after this example: https://github.com/nxrighthere/ENet-CSharp#net-environment
 
@@ -47,19 +53,24 @@ namespace Server
             Raylib.InitWindow(1280, 1024, "Simulation");
             var camera = new Camera3D(new Vector3(50.0f, 50.0f, 50.0f), Vector3.Zero, Vector3.UnitY, 45, CameraProjection.CAMERA_PERSPECTIVE);
 
+            INetworkManager networkManager;
             var sim = new Simulation.Simulation(InitialTurnSpeedMs, PlayerCount);
 
-            // TODO: Use proper argparser
-            if (args.Length == 0)
+            // Argument parsing
+            if (replay != null)
             {
-                // These could come from the player, from the network, or from a file (replay)
-                //var commands = GetPresetCommands();
-                //sim.AddCommands(commands);
+                Console.WriteLine("Loading replay from " + replay);
+                sim.LoadReplay(replay);
             }
-            else if (args.Length == 1)
-            {
-                Console.WriteLine("Loading replay from " + args[0]);
-                sim.LoadReplay(args[0]);
+            if (server) {
+                networkManager = NetworkManager.NewServer(Port);
+                Console.WriteLine("Started server!");
+            } else if (host != null) {
+                networkManager = NetworkManager.NewClient(host, Port);
+                Console.WriteLine("Started client & connected to " + host);
+            } else {
+                networkManager = new NoopNetworkManager();
+                Console.WriteLine("Started without network!");
             }
 
             while (!Raylib.WindowShouldClose())
@@ -67,11 +78,13 @@ namespace Server
                 sim.RunSimulation();
 
                 HandleInput(sim, camera);
+                networkManager.PollEvents();
 
-                Render(sim, camera);
+                Render(sim, camera, networkManager);
             }
 
             Raylib.CloseWindow();
+            networkManager.Dispose();
         }
 
         static void HandleInput(Simulation.Simulation sim, Camera3D camera)
@@ -108,7 +121,7 @@ namespace Server
                 var coll = CollideGround(camera);
                 if (coll.Hit)
                 {
-                    var cmd = new Command
+                    var cmd = new Simulation.Command
                     {
                         PlayerId = uiPlayerID,
                         TargetX = (long)(coll.Point.X * FixedPointRes),
@@ -123,8 +136,8 @@ namespace Server
             }
         }
 
-        
-        static void Render(Simulation.Simulation sim, Camera3D camera)
+
+        static void Render(Simulation.Simulation sim, Camera3D camera, INetworkManager networkManager)
         {
             float delta = sim.GetTimeSinceLastStep();
 
@@ -150,6 +163,11 @@ namespace Server
             Raylib.DrawRectangle(360, 12, Math.Min((int)delta * 3, 500), 20, Color.DARKGREEN);
             Raylib.DrawText($"Current simulation step: {sim.currentTurn}/{MaxTurns}", 10, 40, 24, Color.BLACK);
             Raylib.DrawText($"Ms per simulation step: {sim.turnSpeedMs}", 10, 70, 24, Color.BLACK);
+
+            var clients = networkManager.GetConnectedClients();
+            if (clients.Count() > 0) {
+                Raylib.DrawText($"Remote clients: " + clients.Aggregate("", (a, c) => a + c + ","), 10, 100, 24, Color.BLACK);
+            }
 
             Raylib.EndDrawing();
         }
