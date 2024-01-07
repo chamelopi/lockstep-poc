@@ -66,58 +66,64 @@ namespace Server
             {
                 sim.RunSimulation();
 
-
-                if (Raylib.IsKeyPressed(KeyboardKey.KEY_F))
-                {
-                    Raylib.DrawText("Running full determinism check....", 10, 10, 30, Color.BLACK);
-                    sim.CheckFullDeterminism();
-                    Console.WriteLine("Simulation re-simulated successfully, we should be deterministic!");
-                }
-
-                // Allow control of simulation speed. Simulation speed goes UP when turn duration goes DOWN
-                // (a bit counter-intuitive)
-                if (Raylib.IsKeyPressed(KeyboardKey.KEY_PAGE_UP))
-                {
-                    sim.turnSpeedMs -= TurnSpeedIncrement;
-                }
-                if (Raylib.IsKeyPressed(KeyboardKey.KEY_PAGE_DOWN))
-                {
-                    sim.turnSpeedMs += TurnSpeedIncrement;
-                }
-
-                if (Raylib.IsKeyPressed(KeyboardKey.KEY_S))
-                {
-                    sim.SaveReplay("replay-" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".csv");
-                }
-                if (Raylib.IsKeyPressed(KeyboardKey.KEY_P))
-                {
-                    sim.TogglePause();
-                }
-
-                if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT) && !sim.isPaused)
-                {
-                    var coll = CollideGround(camera);
-                    if (coll.Hit)
-                    {
-                        var cmd = new Command
-                        {
-                            PlayerId = uiPlayerID,
-                            TargetX = (long)(coll.Point.X * FixedPointRes),
-                            TargetY = (long)(coll.Point.Z * FixedPointRes),
-                            // Queue up commands for two turns in the future!
-                            // This allows the netcode time to transmit commands between players
-                            TargetTurn = sim.currentTurn + 2,
-                        };
-                        sim.AddCommand(cmd);
-                        Console.WriteLine($"New command: move to {cmd.TargetX}/{cmd.TargetY}");
-                    }
-                }
+                HandleInput(sim, camera);
 
                 Render(sim, camera);
             }
 
             Raylib.CloseWindow();
         }
+
+        static void HandleInput(Simulation.Simulation sim, Camera3D camera)
+        {
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_F))
+            {
+                Raylib.DrawText("Running full determinism check....", 10, 10, 30, Color.BLACK);
+                sim.CheckFullDeterminism();
+                Console.WriteLine("Simulation re-simulated successfully, we should be deterministic!");
+            }
+
+            // Allow control of simulation speed. Simulation speed goes UP when turn duration goes DOWN
+            // (a bit counter-intuitive)
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_PAGE_UP))
+            {
+                sim.turnSpeedMs -= TurnSpeedIncrement;
+            }
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_PAGE_DOWN))
+            {
+                sim.turnSpeedMs += TurnSpeedIncrement;
+            }
+
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_S))
+            {
+                sim.SaveReplay("replay-" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".csv");
+            }
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_P))
+            {
+                sim.TogglePause();
+            }
+
+            if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT) && !sim.isPaused)
+            {
+                var coll = CollideGround(camera);
+                if (coll.Hit)
+                {
+                    var cmd = new Command
+                    {
+                        PlayerId = uiPlayerID,
+                        TargetX = (long)(coll.Point.X * FixedPointRes),
+                        TargetY = (long)(coll.Point.Z * FixedPointRes),
+                        // Queue up commands for two turns in the future!
+                        // This allows the netcode time to transmit commands between players
+                        TargetTurn = sim.currentTurn + 2,
+                    };
+                    sim.AddCommand(cmd);
+                    Console.WriteLine($"New command: move to {cmd.TargetX}/{cmd.TargetY}");
+                }
+            }
+        }
+
+        
         static void Render(Simulation.Simulation sim, Camera3D camera)
         {
             float delta = sim.GetTimeSinceLastStep();
