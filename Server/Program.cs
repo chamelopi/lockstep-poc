@@ -68,6 +68,7 @@ namespace Server
             Raylib.CloseWindow();
         }
 
+        // TODO: Refactor this into the simulation?
         static void RunSimulation(Simulation.Simulation sim)
         {
             // TODO: Build a clock abstraction for this?
@@ -82,11 +83,10 @@ namespace Server
                 timeSinceLastStep -= sim.turnSpeedMs;
                 lastFrame += sim.turnSpeedMs;
                 sim.Step();
-            }
 
-            // We might disable this for a release build
-            // FIXME: Does not check correctly
-            //sim.CheckDeterminism();
+                // We might disable this for a release build
+                sim.CheckDeterminism();
+            }
         }
 
         static void Render(Simulation.Simulation sim, Camera3D camera)
@@ -94,8 +94,10 @@ namespace Server
             float delta = GetTicks() - lastFrame;
 
             Raylib.BeginDrawing();
-            Raylib.ClearBackground(Color.WHITE);
+            Raylib.ClearBackground(Color.LIGHTGRAY);
             Raylib.BeginMode3D(camera);
+
+            Raylib.DrawPlane(new Vector3(0, -1, 0), new Vector2(80, 80), Color.GREEN);
 
             var interpolatedState = sim.Interpolate(delta);
             int i = 0;

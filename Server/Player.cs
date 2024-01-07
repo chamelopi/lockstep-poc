@@ -11,12 +11,6 @@ namespace Simulation
         public long VelocityY;
         public bool Moving;
 
-        public override readonly string ToString()
-        {
-            return $"Player: P = {X}/{Y}, V = {VelocityX}/{VelocityY}, M = {Moving}";
-        }
-
-
 
         public static Player Interpolate(Player a, Player b, float alpha)
         {
@@ -35,18 +29,6 @@ namespace Simulation
         {
             var result = (long)((float)a * alpha + (float)b * (1 - alpha));
             return result;
-        }
-
-        // Equality checks to allow us to easily check for differences
-        public override readonly bool Equals(object? obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            var other = (Player)obj;
-            return X == other.X && Y == other.Y && VelocityX == other.VelocityX && VelocityY == other.VelocityY && Moving == other.Moving;
         }
 
         // TODO: Player needs to remember his target to stop moving at some point
@@ -70,6 +52,18 @@ namespace Simulation
             }
         }
 
+        // Equality checks to allow us to easily check for differences
+        public override readonly bool Equals(object? obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            var other = (Player)obj;
+            return X == other.X && Y == other.Y && VelocityX == other.VelocityX && VelocityY == other.VelocityY && Moving == other.Moving;
+        }
+
         public static bool operator ==(Player left, Player right)
         {
             return left.Equals(right);
@@ -78,6 +72,11 @@ namespace Simulation
         public static bool operator !=(Player left, Player right)
         {
             return !(left == right);
+        }
+
+        public override readonly string ToString()
+        {
+            return $"Player: P = {X}/{Y}, V = {VelocityX}/{VelocityY}, M = {Moving}";
         }
     }
 

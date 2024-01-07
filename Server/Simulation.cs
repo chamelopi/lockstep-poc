@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Data;
+using System.Security;
 
 namespace Simulation
 {
@@ -14,13 +15,13 @@ namespace Simulation
 
         public readonly int turnSpeedMs;
         public readonly int playerCount;
-        // State of this frame
+        // State of the current simulation step
         public SimulationState currentState;
-        // State of last frame (stored for interpolation purposes)
+        // State of last step (stored for interpolation purposes)
         public SimulationState lastState;
 
-        // State of the frame before the last one (stored for interpolation purposes)
-        public SimulationState lastLastState;
+        // State of two steps ago (stored for interpolation purposes)
+        public SimulationState twoStepsAgoState;
         public int currentTurn;
 
         public PriorityQueue<Command, int> commandQueue;
@@ -34,11 +35,11 @@ namespace Simulation
             this.currentTurn = 0;
 
             this.lastState = new(playerCount);
-            this.lastLastState = new(playerCount);
+            this.twoStepsAgoState = new(playerCount);
             for (int i = 0; i < playerCount; i++)
             {
                 this.lastState.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
-                this.lastLastState.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
+                this.twoStepsAgoState.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
             }
             this.currentState = new(this.lastState);
             this.commandQueue = new();
@@ -64,6 +65,13 @@ namespace Simulation
         public void Step()
         {
             currentTurn++;
+            // Advance to next frame
+            SimulationState nextState = new(currentState);
+            // Preserve the last two frames for interpolation purposes
+            this.twoStepsAgoState = lastState;
+            this.lastState = currentState;
+            this.currentState = nextState;
+
             lastFrameActions.Clear();
             while ((commandQueue.Count > 0) && (commandQueue.Peek().TargetTurn == currentTurn))
             {
@@ -71,27 +79,20 @@ namespace Simulation
                 lastFrameActions.Add(command);
                 HandleCommand(command);
             }
-
+            
             // Update state
             for (int i = 0; i < this.currentState.Count; i++)
             {
                 var player = this.currentState[i];
                 this.currentState[i] = player.Update();
             }
-
-            // Advance to next frame
-            SimulationState nextState = new(currentState);
-            // Preserve the last two frames for interpolation purposes
-            this.lastLastState = lastState;
-            this.lastState = currentState;
-            this.currentState = nextState;
         }
 
         private void HandleCommand(Command command)
         {
             if (command.PlayerId < 0 || command.PlayerId >= this.playerCount)
             {
-                // TODO: Handle this error somehow
+                // TODO: Handle this error somehow?
                 Console.WriteLine($"invalid player ID {command.PlayerId} in command! Discarding command");
                 return;
             }
@@ -125,7 +126,7 @@ namespace Simulation
 
             for (int i = 0; i < interpolatedState.Count; i++)
             {
-                interpolatedState[i] = Player.Interpolate(lastState[i], lastLastState[i], alpha);
+                interpolatedState[i] = Player.Interpolate(lastState[i], twoStepsAgoState[i], alpha);
             }
 
             return interpolatedState;

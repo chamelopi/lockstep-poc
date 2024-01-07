@@ -8,5 +8,10 @@ namespace Simulation {
         public long TargetY;
 
         public int TargetTurn;
+
+        public override string ToString()
+        {
+            return $"Command: id={PlayerId}, tx={TargetX}, ty={TargetY}, turn={TargetTurn}";
+        }
     }
 }
