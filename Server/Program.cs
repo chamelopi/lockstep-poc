@@ -63,10 +63,10 @@ namespace Server
                 sim.LoadReplay(replay);
             }
             if (server) {
-                networkManager = NetworkManager.NewServer(Port);
+                networkManager = ENetNetworkManager.NewServer(Port);
                 Console.WriteLine("Started server!");
             } else if (host != null) {
-                networkManager = NetworkManager.NewClient(host, Port);
+                networkManager = ENetNetworkManager.NewClient(host, Port);
                 Console.WriteLine("Started client & connected to " + host);
             } else {
                 networkManager = new NoopNetworkManager();

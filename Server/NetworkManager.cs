@@ -28,15 +28,17 @@ namespace Server {
         }
     }
 
+    // We will probably have another NetworkManager for DOTSNet/Mirror
 
-    public class NetworkManager : INetworkManager {
+
+    public class ENetNetworkManager : INetworkManager {
         private Host host;
         private bool isServer;
         private Peer? peer;
 
         private HashSet<uint> remotePeers;
 
-        private NetworkManager(Host host, bool isServer) {
+        private ENetNetworkManager(Host host, bool isServer) {
             ENet.Library.Initialize();
             this.host = host;
             this.isServer = isServer;
@@ -44,8 +46,8 @@ namespace Server {
         }
 
 
-        public static NetworkManager NewServer(ushort port, int maxClients = 8) {
-            var nm = new NetworkManager(new Host(), true);
+        public static ENetNetworkManager NewServer(ushort port, int maxClients = 8) {
+            var nm = new ENetNetworkManager(new Host(), true);
             var address = new Address
             {
                 Port = port
@@ -54,8 +56,8 @@ namespace Server {
             return nm;
         }
 
-        public static NetworkManager NewClient(string ip, ushort port) {
-            var nm = new NetworkManager(new Host(), true);
+        public static ENetNetworkManager NewClient(string ip, ushort port) {
+            var nm = new ENetNetworkManager(new Host(), true);
             var address = new Address
             {
                 Port = port,
