@@ -11,8 +11,6 @@ see https://docs.unity3d.com/Manual/UsingDLL.html
 4. ???
 5. Does not work :(
 
-TODO: Write or add a serializer for commands & packets
-
 ## Network protocol outline
 
 TODO: Figure out if we need to manually relay messages on the server, or if that happens automatically
@@ -25,7 +23,7 @@ On connect:
 - New player broadcasts a HELLO package. This will tell all other clients about it and its ID.
 - Other clients take note of the new peer and respond with their own ID, allowing the player to register them and their state
 - All clients start in the game in the state WAITING.
-  - They load/generate the game world
+  - They load/generate the game world. In HGLG, we could probably just transmit the world seed for random maps.
   - Once they're done, they broadcast a READY message and transition to state ready
 - The first clients who connects becomes the host and may start the game
 
@@ -34,9 +32,25 @@ START GAME message:
 - all clients need to be ready first (READY)
 
 TODO: How to handle entities spawing and despawning? Find a deterministic algorithm for assigning IDs maybe (we can first test this with a purely local simulation)
+- Spawning could be a command in some cases, in other caes it will be automatically during simulation. Order of this will have to be defined
+- De-spawning will occur on death, destruction, resource harvesting, etc. This might be tricky to get right
 
 Every turn:
 - TODO: Do like the AoE paper says :D
 - Collect inputs and broadcast them to the other player's sims (INPUT/COMMAND)
 - Sync turn increments (NEXT TURN)
 - Pause game if a player drops/misses a NEXT TURN, but close connection the game after a timeout (saving all commands to a replay to allow loading)
+
+### Data stored per peer
+
+- PlayerID (server-assigned)
+- Current state
+- Last message timestamp (for dc detection)
+- Player name (?)
+
+### Data that might be of interest for debugging/statistics and should be collected
+
+- Round trip time per peer
+- Traffic
+- Average time to calculate a simulation step
+- Checksums of simulation state
