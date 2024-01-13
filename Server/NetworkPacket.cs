@@ -12,7 +12,6 @@ namespace Server
             var data = new byte[packet.Length];
             packet.CopyTo(data);
             // TODO: Assumes that the short is stored in little endian
-            // TODO: How do we guarantee that magic is the first member in each packet?
             ushort magic = (ushort)(data[0] | data[1] << 8);
 
             if (T.getMagic() != magic)

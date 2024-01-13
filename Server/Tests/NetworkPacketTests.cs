@@ -29,5 +29,19 @@ public class Tests
         }
     }
 
-    // TODO: Add tests for serializer/deserializer
+    // TODO: Add more tests for serializer/deserializer
+    [Test]
+    public void TestServerGreetingPacket() {
+        var pack = new ServerGreetingPacket {
+            magic = ServerGreetingPacket.getMagic(),
+            assignedPlayerId = 12,
+        };
+        var serialized = NetworkPacket.Serialize(pack);
+        var data = new byte[serialized.Length];
+        serialized.CopyTo(data);
+        
+        // length is 8 with padding
+        Assert.That(data, Is.EquivalentTo(new byte[]{ 0xf0, 0xca, 0x00, 0x00, 12, 0x00, 0x00, 0x00 }));
+
+    }
 }
