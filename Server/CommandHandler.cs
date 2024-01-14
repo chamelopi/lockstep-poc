@@ -49,6 +49,8 @@ namespace Simulation
 
                 affectedPlayer.VelocityX = vx;
                 affectedPlayer.VelocityY = vy;
+                affectedPlayer.TargetX = command.TargetX;
+                affectedPlayer.TargetY = command.TargetY;
                 affectedPlayer.Moving = true;
 
                 currentState.Entities[selected] = affectedPlayer;

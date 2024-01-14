@@ -1,15 +1,14 @@
-﻿using System.Dynamic;
-using System.Xml.Serialization;
-using Simulation;
+﻿using Simulation;
 using System.Numerics;
 using Raylib_cs;
 using System.CommandLine;
+
+using static Simulation.FixedPointUtil;
 
 namespace Server
 {
     class Server
     {
-        static readonly float FixedPointRes = 10000f;
         static readonly ushort Port = 1337;
         static readonly int InitialTurnSpeedMs = 100;
         static readonly int TurnSpeedIncrement = 10;
@@ -146,10 +145,14 @@ namespace Server
                 bool hit = false;
                 foreach (var entity in sim.currentState.Entities)
                 {
-                    var distX = entity.X - (long)(coll.Point.X * FixedPointRes);
-                    var distY = entity.X - (long)(coll.Point.X * FixedPointRes);
-                    var dist = (long)Math.Sqrt(distX * distX + distY * distY);
-                    if (dist < FixedPointRes)
+                    // Guard against selecting other player's entities.
+                    // TODO: Replace this with ownership check once we have more than once entity per player
+                    if (i != uiPlayerID) {
+                        continue;
+                    }
+
+                    var dist = Distance(entity.X, entity.Y, coll.Point.X, coll.Point.Z);
+                    if (dist < FixedPointUtil.One * 2)
                     {
                         var cmd = new Simulation.Command
                         {
@@ -192,12 +195,14 @@ namespace Server
             var coll = CollideGround(camera);
             if (coll.Hit)
             {
+                ToFixed(12f);
+
                 var cmd = new Simulation.Command
                 {
                     PlayerId = uiPlayerID,
                     CommandType = CommandType.MoveCommand,
-                    TargetX = (long)(coll.Point.X * FixedPointRes),
-                    TargetY = (long)(coll.Point.Z * FixedPointRes),
+                    TargetX = ToFixed(coll.Point.X),
+                    TargetY = ToFixed(coll.Point.Z),
                     // Queue up commands for two turns in the future!
                     // This allows the netcode time to transmit commands between players
                     TargetTurn = sim.currentTurn + 2,
@@ -222,8 +227,11 @@ namespace Server
             int i = 0;
             foreach (var obj in interpolatedState.Entities)
             {
-                var pos = new Vector3(((float)obj.X) / FixedPointRes, 0, ((float)obj.Y) / FixedPointRes);
+                var pos = new Vector3(FromFixed(obj.X), 0, FromFixed(obj.Y));
                 Raylib.DrawCube(pos, 1, 1, 1, GetColor(i));
+                if (interpolatedState.SelectedEntities.Contains(i)) {
+                    Raylib.DrawCircle3D(pos, 1.5f, new Vector3(1, 0, 0), 90f, GetColor(i));
+                }
                 i++;
             }
 

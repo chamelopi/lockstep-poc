@@ -1,6 +1,5 @@
 # Tasks
 
-4. Refactor entity class to store target position of move
 5. Implement Command serialization
    - Serialize to json, deserialize from json
    - Refactor current replay mechanic to use json

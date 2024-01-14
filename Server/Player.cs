@@ -7,6 +7,8 @@ namespace Simulation
     {
         public long X;
         public long Y;
+        public long TargetX;
+        public long TargetY;
         public long VelocityX;
         public long VelocityY;
         public bool Moving;
@@ -31,20 +33,34 @@ namespace Simulation
             return result;
         }
 
-        // TODO: Player needs to remember his target to stop moving at some point
         public Player Update()
         {
             if (this.Moving)
             {
-                var updatedPlayer = new Player
+                if (FixedPointUtil.Distance(X, Y, TargetX, TargetY) < FixedPointUtil.One * 2) {
+                    return new Player
+                    {
+                        X = this.TargetX,
+                        Y = this.TargetY,
+                        VelocityX = this.VelocityX,
+                        VelocityY = this.VelocityY,
+                        TargetX = this.TargetX,
+                        TargetY = this.TargetY,
+                        // Stop moving
+                        Moving = false,
+                    };
+                }
+
+                return new Player
                 {
                     X = this.X + this.VelocityX,
                     Y = this.Y + this.VelocityY,
                     VelocityX = this.VelocityX,
                     VelocityY = this.VelocityY,
+                    TargetX = this.TargetX,
+                    TargetY = this.TargetY,
                     Moving = this.Moving,
                 };
-                return updatedPlayer;
             }
             else
             {
@@ -61,7 +77,8 @@ namespace Simulation
             }
 
             var other = (Player)obj;
-            return X == other.X && Y == other.Y && VelocityX == other.VelocityX && VelocityY == other.VelocityY && Moving == other.Moving;
+            return X == other.X && Y == other.Y && VelocityX == other.VelocityX && VelocityY == other.VelocityY && Moving == other.Moving
+                && TargetX == other.TargetX && TargetY == other.TargetY;
         }
 
         public static bool operator ==(Player left, Player right)
@@ -76,7 +93,7 @@ namespace Simulation
 
         public override readonly string ToString()
         {
-            return $"Player: P = {X}/{Y}, V = {VelocityX}/{VelocityY}, M = {Moving}";
+            return $"Player: P = {X}/{Y}, V = {VelocityX}/{VelocityY}, M = {Moving}, T = {TargetX}/{TargetY}";
         }
     }
 
