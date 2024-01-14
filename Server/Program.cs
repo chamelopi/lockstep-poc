@@ -148,7 +148,7 @@ namespace Server
             // TODO: This is not smooth, we should maybe store the delta when pausing?
             var interpolatedState = sim.isPaused ? sim.currentState : sim.Interpolate(delta);
             int i = 0;
-            foreach (var obj in interpolatedState)
+            foreach (var obj in interpolatedState.Entities)
             {
                 var pos = new Vector3(((float)obj.X) / FixedPointRes, 0, ((float)obj.Y) / FixedPointRes);
                 Raylib.DrawCube(pos, 1, 1, 1, GetColor(i));

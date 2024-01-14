@@ -1,9 +1,6 @@
 
 namespace Simulation
 {
-    using SimulationState = List<Player>;
-
-
     public class Simulation
     {
         // Per turn!
@@ -40,7 +37,7 @@ namespace Simulation
             this.lastState = new(playerCount);
             for (int i = 0; i < playerCount; i++)
             {
-                this.lastState.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
+                this.lastState.Entities.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
             }
             this.currentState = new(this.lastState);
             this.twoStepsAgoState = new(this.lastState);
@@ -56,7 +53,7 @@ namespace Simulation
             this.currentState = new(playerCount);
             for (int i = 0; i < playerCount; i++)
             {
-                this.currentState.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
+                this.currentState.Entities.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
             }
             this.lastState = new(currentState);
             this.twoStepsAgoState = new(currentState);
@@ -126,10 +123,10 @@ namespace Simulation
             }
 
             // Update state
-            for (int i = 0; i < this.currentState.Count; i++)
+            for (int i = 0; i < this.currentState.Entities.Count; i++)
             {
-                var player = this.currentState[i];
-                this.currentState[i] = player.Update();
+                var player = this.currentState.Entities[i];
+                this.currentState.Entities[i] = player.Update();
             }
         }
 
@@ -142,7 +139,7 @@ namespace Simulation
                 return;
             }
 
-            var affectedPlayer = this.currentState[command.PlayerId];
+            var affectedPlayer = this.currentState.Entities[command.PlayerId];
 
             var dx = command.TargetX - affectedPlayer.X;
             var dy = command.TargetY - affectedPlayer.Y;
@@ -154,7 +151,7 @@ namespace Simulation
             affectedPlayer.VelocityY = vy;
             affectedPlayer.Moving = true;
 
-            this.currentState[command.PlayerId] = affectedPlayer;
+            this.currentState.Entities[command.PlayerId] = affectedPlayer;
         }
 
         public SimulationState Interpolate(float msSinceStartOfTurn)
@@ -169,9 +166,9 @@ namespace Simulation
             //    b) an entity was despawned in one of these frames?
             //    do we give them a spawn turn index and let the rendering code handle that somehow?
 
-            for (int i = 0; i < interpolatedState.Count; i++)
+            for (int i = 0; i < interpolatedState.Entities.Count; i++)
             {
-                interpolatedState[i] = Player.Interpolate(lastState[i], twoStepsAgoState[i], alpha);
+                interpolatedState.Entities[i] = Player.Interpolate(lastState.Entities[i], twoStepsAgoState.Entities[i], alpha);
             }
 
             return interpolatedState;
@@ -230,16 +227,16 @@ namespace Simulation
             }
 
             // Check if the same number of objects
-            if (stateA.Count != stateB.Count)
+            if (stateA.Entities.Count != stateB.Entities.Count)
             {
-                throw new SimulationNotDeterministicException($"Number of entities in state differs: Real sim - {stateA.Count} | Check sim - {stateB.Count}");
+                throw new SimulationNotDeterministicException($"Number of entities in state differs: Real sim - {stateA.Entities.Count} | Check sim - {stateB.Entities.Count}");
             }
 
             // Check if objects are equal
-            for (int i = 0; i < stateA.Count; i++)
+            for (int i = 0; i < stateA.Entities.Count; i++)
             {
-                var objA = stateA[i];
-                var objB = stateB[i];
+                var objA = stateA.Entities[i];
+                var objB = stateB.Entities[i];
 
                 if (objA != objB)
                 {
