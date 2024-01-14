@@ -3,8 +3,6 @@ namespace Simulation
 {
     public class Simulation
     {
-        // Per turn!
-        private readonly long PlayerSpeed = 10000;
 
         // By changing this, we can speed up or slow down the simulation.
         // Can be used to control game speed, or to fast-forward in replays or spectator mode
@@ -139,19 +137,7 @@ namespace Simulation
                 return;
             }
 
-            var affectedPlayer = this.currentState.Entities[command.PlayerId];
-
-            var dx = command.TargetX - affectedPlayer.X;
-            var dy = command.TargetY - affectedPlayer.Y;
-            var dist = (long)Math.Sqrt(dx * dx + dy * dy);
-            var vx = dx * PlayerSpeed / dist;
-            var vy = dy * PlayerSpeed / dist;
-
-            affectedPlayer.VelocityX = vx;
-            affectedPlayer.VelocityY = vy;
-            affectedPlayer.Moving = true;
-
-            this.currentState.Entities[command.PlayerId] = affectedPlayer;
+            CommandHandler.HandleCommand(currentState, command);
         }
 
         public SimulationState Interpolate(float msSinceStartOfTurn)

@@ -17,7 +17,7 @@ namespace Server
         static readonly int MaxTurns = 100;
 
         static readonly int GroundSize = 80;
-        
+
 
         static int uiPlayerID = 0;
 
@@ -32,9 +32,11 @@ namespace Server
         }
 
         // Entrypoint, using System.CommandLine package for arg parsing
-        static async Task<int> Main(string[] args) {
+        static async Task<int> Main(string[] args)
+        {
             var replayOption = new Option<string?>("--replay", "Replay file to load on startup, if desired");
             var hostOption = new Option<string?>("--host", "Acts as a network client and connects to the specified host");
+            hostOption.AddAlias("--connect");
             var serverOption = new Option<bool>("--server", () => false, "Acts as a network server");
             var rootCommand = new RootCommand("Run lockstep simulation");
             rootCommand.AddOption(replayOption);
@@ -60,13 +62,18 @@ namespace Server
                 Console.WriteLine("Loading replay from " + replay);
                 sim.LoadReplay(replay);
             }
-            if (server) {
+            if (server)
+            {
                 networkManager = ENetNetworkManager.NewServer(Port);
                 Console.WriteLine("Started server!");
-            } else if (host != null) {
+            }
+            else if (host != null)
+            {
                 networkManager = ENetNetworkManager.NewClient(host, Port);
                 Console.WriteLine("Started client & connected to " + host);
-            } else {
+            }
+            else
+            {
                 networkManager = new NoopNetworkManager();
                 Console.WriteLine("Started without network!");
             }
@@ -114,22 +121,78 @@ namespace Server
                 sim.TogglePause();
             }
 
-            if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT) && !sim.isPaused)
+            if (!sim.isPaused)
             {
-                var coll = CollideGround(camera);
-                if (coll.Hit)
+                // Right click for move command
+                if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT))
                 {
-                    var cmd = new Simulation.Command
+                    var coll = CollideGround(camera);
+                    if (coll.Hit)
                     {
-                        PlayerId = uiPlayerID,
-                        TargetX = (long)(coll.Point.X * FixedPointRes),
-                        TargetY = (long)(coll.Point.Z * FixedPointRes),
-                        // Queue up commands for two turns in the future!
-                        // This allows the netcode time to transmit commands between players
-                        TargetTurn = sim.currentTurn + 2,
-                    };
-                    sim.AddCommand(cmd);
-                    Console.WriteLine($"New command: move to {cmd.TargetX}/{cmd.TargetY}");
+                        var cmd = new Simulation.Command
+                        {
+                            PlayerId = uiPlayerID,
+                            CommandType = CommandType.MoveCommand,
+                            TargetX = (long)(coll.Point.X * FixedPointRes),
+                            TargetY = (long)(coll.Point.Z * FixedPointRes),
+                            // Queue up commands for two turns in the future!
+                            // This allows the netcode time to transmit commands between players
+                            TargetTurn = sim.currentTurn + 2,
+                        };
+                        sim.AddCommand(cmd);
+                        Console.WriteLine($"New command: move to {cmd.TargetX}/{cmd.TargetY}");
+                    }
+                }
+                if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+                {
+                    // Find point on ground
+                    var coll = CollideGround(camera);
+                    if (coll.Hit)
+                    {
+                        // Check for entities in the close proximity
+                        int i = 0;
+                        bool hit = false;
+                        foreach (var entity in sim.currentState.Entities)
+                        {
+                            var distX = entity.X - (long)(coll.Point.X * FixedPointRes);
+                            var distY = entity.X - (long)(coll.Point.X * FixedPointRes);
+                            var dist = (long)Math.Sqrt(distX * distX + distY * distY);
+                            if (dist < FixedPointRes)
+                            {
+                                var cmd = new Simulation.Command
+                                {
+                                    // TODO: We will have to add an entity id later!
+                                    PlayerId = uiPlayerID,
+                                    CommandType = CommandType.Select,
+                                    // Queue up commands for two turns in the future!
+                                    // This allows the netcode time to transmit commands between players
+                                    TargetTurn = sim.currentTurn + 2,
+                                };
+                                sim.AddCommand(cmd);
+                                hit = true;
+
+                                Console.WriteLine($"New command: selected entity {i}");
+                                break;
+                            }
+                            i++;
+                        }
+
+                        // If we hit nothing, deselect
+                        if (!hit)
+                        {
+                            var cmd = new Simulation.Command
+                            {
+                                PlayerId = uiPlayerID,
+                                CommandType = CommandType.Deselect,
+                                // Queue up commands for two turns in the future!
+                                // This allows the netcode time to transmit commands between players
+                                TargetTurn = sim.currentTurn + 2,
+                            };
+                            sim.AddCommand(cmd);
+
+                            Console.WriteLine($"New command: deselected everything");
+                        }
+                    }
                 }
             }
         }
@@ -163,7 +226,8 @@ namespace Server
             Raylib.DrawText($"Ms per simulation step: {sim.turnSpeedMs}", 10, 70, 24, Color.BLACK);
 
             var clients = networkManager.GetConnectedClients();
-            if (clients.Count() > 0) {
+            if (clients.Count() > 0)
+            {
                 Raylib.DrawText($"Remote clients: " + clients.Aggregate("", (a, c) => a + c + ","), 10, 100, 24, Color.BLACK);
             }
 
