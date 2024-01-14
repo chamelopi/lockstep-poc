@@ -1,3 +1,5 @@
+namespace Simulation;
+
 public class Clock {
     public static long GetTicks()
     {

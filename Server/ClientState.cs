@@ -1,4 +1,4 @@
-using Server;
+namespace Server;
 
 /**
  * Represents the state of the other clients

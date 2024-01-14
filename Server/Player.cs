@@ -1,6 +1,5 @@
+namespace Simulation;
 
-namespace Simulation
-{
     // long due to floating point determinism stuff - would be fixed point probably
     // Stand-in struct for all game entities.
     public struct Player
@@ -97,5 +96,3 @@ namespace Simulation
         }
     }
 
-
-}

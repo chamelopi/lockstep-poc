@@ -1,5 +1,5 @@
-namespace Simulation
-{
+namespace Simulation;
+
     public class CommandHandler
     {
         // Per turn!
@@ -57,4 +57,3 @@ namespace Simulation
             }
         }
     }
-}

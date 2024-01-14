@@ -16,3 +16,4 @@
    - allow player to spawn entities (debug function)
    - allow player to kill entities (debug function)
 9. Implement box select command
+10. Implement checksum calculation for Simulation State

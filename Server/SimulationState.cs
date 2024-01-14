@@ -1,18 +1,18 @@
-namespace Simulation
+namespace Simulation;
+public class SimulationState
 {
-    public class SimulationState
+    public List<Player> Entities;
+    public List<int> SelectedEntities;
+
+    public SimulationState(int numberOfPlayers)
     {
-        public List<Player> Entities;
-        public List<int> SelectedEntities;
+        Entities = new(numberOfPlayers);
+        SelectedEntities = new();
+    }
 
-        public SimulationState(int numberOfPlayers) {
-            Entities = new(numberOfPlayers);
-            SelectedEntities = new();
-        }
-
-        public SimulationState(SimulationState copy) {
-            this.Entities = new(copy.Entities);
-            this.SelectedEntities = new(copy.SelectedEntities);
-        }
+    public SimulationState(SimulationState copy)
+    {
+        this.Entities = new(copy.Entities);
+        this.SelectedEntities = new(copy.SelectedEntities);
     }
 }
