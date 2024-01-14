@@ -77,22 +77,20 @@ public class Tests
             PlayerName = "verylongnamethatmighttakelongertoserialize",
         };
 
-        // TODO: refactor into clock class
-        var begin = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var numPackets = 10000;
         var maxTime = 100;
         long bytes = 0;
 
-        for (int i = 0; i < numPackets; i++)
+        var diff = Clock.TimeIt(() =>
         {
-            var serialized = NetworkPacket.Serialize(packet);
-            bytes += serialized.Length;
-            var deserialized = NetworkPacket.Deserialize<HelloPacket>(serialized);
-            Assert.That(deserialized.PlayerId, Is.EqualTo(1));
-        }
-
-        var end = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var diff = end - begin;
+            for (int i = 0; i < numPackets; i++)
+            {
+                var serialized = NetworkPacket.Serialize(packet);
+                bytes += serialized.Length;
+                var deserialized = NetworkPacket.Deserialize<HelloPacket>(serialized);
+                Assert.That(deserialized.PlayerId, Is.EqualTo(1));
+            }
+        });
 
         Console.WriteLine($"Serializing {numPackets} ({bytes} bytes) took {diff}ms!");
 

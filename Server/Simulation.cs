@@ -50,7 +50,7 @@ namespace Simulation
             this.commandQueue = new();
             this.allCommands = new();
             this.lastFrameActions = new();
-            this.lastTurnTimestamp = GetTicks();
+            this.lastTurnTimestamp = Clock.GetTicks();
         }
 
         public void Reset()
@@ -67,7 +67,7 @@ namespace Simulation
             this.commandQueue = new();
             this.allCommands = new();
             this.lastFrameActions = new();
-            this.lastTurnTimestamp = GetTicks();
+            this.lastTurnTimestamp = Clock.GetTicks();
         }
 
         public void AddCommand(Command command)
@@ -92,11 +92,11 @@ namespace Simulation
                 return;
             }
 
-            // TODO: Build a clock abstraction for this?
+            // TODO: Refactor into clock?
             long timeSinceLastStep = 0;
 
             // Fixed time step
-            var startFrame = GetTicks();
+            var startFrame = Clock.GetTicks();
             timeSinceLastStep += startFrame - lastTurnTimestamp;
 
             while (timeSinceLastStep > turnSpeedMs)
@@ -251,14 +251,11 @@ namespace Simulation
             }
         }
 
-        public static long GetTicks()
-        {
-            return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        }
+        
 
         public float GetTimeSinceLastStep()
         {
-            return GetTicks() - lastTurnTimestamp;
+            return Clock.GetTicks() - lastTurnTimestamp;
         }
 
         public void SaveReplay(string filename)
@@ -318,7 +315,7 @@ namespace Simulation
             isPaused = !isPaused;
             if (!isPaused)
             {
-                lastTurnTimestamp = GetTicks();
+                lastTurnTimestamp = Clock.GetTicks();
             }
         }
     }
