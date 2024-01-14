@@ -126,77 +126,86 @@ namespace Server
                 // Right click for move command
                 if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT))
                 {
-                    var coll = CollideGround(camera);
-                    if (coll.Hit)
+                    RecordMoveCommand(sim, camera);
+                }
+                if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+                {
+                    RecordSelectCommand(sim, camera);
+                }
+            }
+        }
+
+        private static void RecordSelectCommand(Simulation.Simulation sim, Camera3D camera)
+        {
+            // Find point on ground
+            var coll = CollideGround(camera);
+            if (coll.Hit)
+            {
+                // Check for entities in the close proximity
+                int i = 0;
+                bool hit = false;
+                foreach (var entity in sim.currentState.Entities)
+                {
+                    var distX = entity.X - (long)(coll.Point.X * FixedPointRes);
+                    var distY = entity.X - (long)(coll.Point.X * FixedPointRes);
+                    var dist = (long)Math.Sqrt(distX * distX + distY * distY);
+                    if (dist < FixedPointRes)
                     {
                         var cmd = new Simulation.Command
                         {
+                            // TODO: We will have to add an entity id later!
                             PlayerId = uiPlayerID,
-                            CommandType = CommandType.MoveCommand,
-                            TargetX = (long)(coll.Point.X * FixedPointRes),
-                            TargetY = (long)(coll.Point.Z * FixedPointRes),
+                            CommandType = CommandType.Select,
                             // Queue up commands for two turns in the future!
                             // This allows the netcode time to transmit commands between players
                             TargetTurn = sim.currentTurn + 2,
                         };
                         sim.AddCommand(cmd);
-                        Console.WriteLine($"New command: move to {cmd.TargetX}/{cmd.TargetY}");
+                        hit = true;
+
+                        Console.WriteLine($"New command: selected entity {i}");
+                        break;
                     }
+                    i++;
                 }
-                if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+
+                // If we hit nothing, deselect
+                if (!hit)
                 {
-                    // Find point on ground
-                    var coll = CollideGround(camera);
-                    if (coll.Hit)
+                    var cmd = new Simulation.Command
                     {
-                        // Check for entities in the close proximity
-                        int i = 0;
-                        bool hit = false;
-                        foreach (var entity in sim.currentState.Entities)
-                        {
-                            var distX = entity.X - (long)(coll.Point.X * FixedPointRes);
-                            var distY = entity.X - (long)(coll.Point.X * FixedPointRes);
-                            var dist = (long)Math.Sqrt(distX * distX + distY * distY);
-                            if (dist < FixedPointRes)
-                            {
-                                var cmd = new Simulation.Command
-                                {
-                                    // TODO: We will have to add an entity id later!
-                                    PlayerId = uiPlayerID,
-                                    CommandType = CommandType.Select,
-                                    // Queue up commands for two turns in the future!
-                                    // This allows the netcode time to transmit commands between players
-                                    TargetTurn = sim.currentTurn + 2,
-                                };
-                                sim.AddCommand(cmd);
-                                hit = true;
+                        PlayerId = uiPlayerID,
+                        CommandType = CommandType.Deselect,
+                        // Queue up commands for two turns in the future!
+                        // This allows the netcode time to transmit commands between players
+                        TargetTurn = sim.currentTurn + 2,
+                    };
+                    sim.AddCommand(cmd);
 
-                                Console.WriteLine($"New command: selected entity {i}");
-                                break;
-                            }
-                            i++;
-                        }
-
-                        // If we hit nothing, deselect
-                        if (!hit)
-                        {
-                            var cmd = new Simulation.Command
-                            {
-                                PlayerId = uiPlayerID,
-                                CommandType = CommandType.Deselect,
-                                // Queue up commands for two turns in the future!
-                                // This allows the netcode time to transmit commands between players
-                                TargetTurn = sim.currentTurn + 2,
-                            };
-                            sim.AddCommand(cmd);
-
-                            Console.WriteLine($"New command: deselected everything");
-                        }
-                    }
+                    Console.WriteLine($"New command: deselected everything");
                 }
             }
         }
 
+        private static void RecordMoveCommand(Simulation.Simulation sim, Camera3D camera)
+        {
+            var coll = CollideGround(camera);
+            if (coll.Hit)
+            {
+                var cmd = new Simulation.Command
+                {
+                    PlayerId = uiPlayerID,
+                    CommandType = CommandType.MoveCommand,
+                    TargetX = (long)(coll.Point.X * FixedPointRes),
+                    TargetY = (long)(coll.Point.Z * FixedPointRes),
+                    // Queue up commands for two turns in the future!
+                    // This allows the netcode time to transmit commands between players
+                    TargetTurn = sim.currentTurn + 2,
+                };
+                sim.AddCommand(cmd);
+                Console.WriteLine($"New command: move to {cmd.TargetX}/{cmd.TargetY}");
+            }
+        }
 
         static void Render(Simulation.Simulation sim, Camera3D camera, INetworkManager networkManager)
         {

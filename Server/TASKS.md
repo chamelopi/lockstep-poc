@@ -1,7 +1,5 @@
 # Tasks
 
-3. Refactor command recording
-   - create helper methods / new class
 4. Refactor entity class to store target position of move
 5. Implement Command serialization
    - Serialize to json, deserialize from json
