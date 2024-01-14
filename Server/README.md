@@ -13,9 +13,6 @@ see https://docs.unity3d.com/Manual/UsingDLL.html
 
 ## Network protocol outline
 
-TODO: Figure out if we need to manually relay messages on the server, or if that happens automatically
-(should happen automatically)
-
 Most messages are broadcasted to all clients. Clients take note of their own and other client's states.
 
 On connect:

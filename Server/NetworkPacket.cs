@@ -13,6 +13,7 @@ namespace Server
         Command,
     }
 
+    // TODO: Can we ensure that 'PkgType' is always correctly filled on serialization?
     public class NetworkPacket
     {
         public static JsonSerializerOptions options = new()
@@ -58,7 +59,6 @@ namespace Server
     /**
      * Sent by server to assign player ID.
      */
-    [Serializable]
     public class ServerGreetingPacket : NetworkPacket
     {
         public int AssignedPlayerId { get; set; }
@@ -67,7 +67,6 @@ namespace Server
     /**
      * Sent by server or client to indicate any kind of error
      */
-    [Serializable]
     public class ErrorPacket : NetworkPacket
     {
         public byte PlayerId { get; set; }
@@ -85,7 +84,6 @@ namespace Server
         }
     }
 
-    [Serializable]
     public enum ClientState
     {
         Disconnected,
@@ -97,18 +95,18 @@ namespace Server
     /**
      * Sent by all clients on every new connect to notify them about their current state.
      */
-    [Serializable]
     public class HelloPacket : NetworkPacket
     {
-        public byte PlayerId { get; set; }
+        public int PlayerId { get; set; }
         public ClientState ClientState { get; set; }
         public string PlayerName { get; set; }
+        public bool CurrentTurnDone { get; set; }
     }
 
     public class StateChangePacket : NetworkPacket
     {
-        public byte PlayerId { get; set; }
-        public byte NewClientState { get; set; }
+        public int PlayerId { get; set; }
+        public ClientState NewClientState { get; set; }
 
     }
 

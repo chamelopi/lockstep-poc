@@ -1,11 +1,16 @@
 using System.Runtime.InteropServices;
 using ENet;
+using Simulation;
 
-namespace Server {
+namespace Server
+{
 
-    public interface INetworkManager : IDisposable {
+    public interface INetworkManager : IDisposable
+    {
         public void PollEvents();
-        public IEnumerable<uint> GetConnectedClients();
+        public IEnumerable<int> GetConnectedClients();
+        public IEnumerable<string> GetClientNames();
+        public bool IsServer();
     }
 
     /**
@@ -18,12 +23,23 @@ namespace Server {
             // Do nothing
         }
 
-        public IEnumerable<uint> GetConnectedClients()
+        public IEnumerable<string> GetClientNames()
         {
-            return new List<uint>();
+            return new List<string>();
         }
 
-        public void PollEvents() {
+        public IEnumerable<int> GetConnectedClients()
+        {
+            return new List<int>();
+        }
+
+        public bool IsServer()
+        {
+            return false;
+        }
+
+        public void PollEvents()
+        {
             // do nothing
         }
     }
@@ -31,14 +47,17 @@ namespace Server {
     // We will probably have another NetworkManager for DOTSNet/Mirror
 
 
-    public class ENetNetworkManager : INetworkManager {
+    public class ENetNetworkManager : INetworkManager
+    {
         private Host host;
         private bool isServer;
         private Peer? peer;
 
-        private HashSet<uint> remotePeers;
+        private Dictionary<int, Client> remotePeers;
+        private int myPlayerId;
 
-        private ENetNetworkManager(Host host, bool isServer) {
+        private ENetNetworkManager(Host host, bool isServer)
+        {
             ENet.Library.Initialize();
             this.host = host;
             this.isServer = isServer;
@@ -46,18 +65,32 @@ namespace Server {
         }
 
 
-        public static ENetNetworkManager NewServer(ushort port, int maxClients = 8) {
+        public static ENetNetworkManager NewServer(ushort port, int maxClients = 8)
+        {
             var nm = new ENetNetworkManager(new Host(), true);
             var address = new Address
             {
                 Port = port
             };
             nm.host.Create(address, maxClients);
+
+            // Set up our own state
+            nm.myPlayerId = 1;
+            nm.remotePeers.Add(1, new Client {  
+                CurrentTurnDone = false,
+                // TODO: Do we have our own peer id?
+                PeerId = 0,
+                PlayerId = 1,
+                PlayerName = "Player 1",
+                State = ClientState.Waiting,
+            });
+
             return nm;
         }
 
-        public static ENetNetworkManager NewClient(string ip, ushort port) {
-            var nm = new ENetNetworkManager(new Host(), true);
+        public static ENetNetworkManager NewClient(string ip, ushort port)
+        {
+            var nm = new ENetNetworkManager(new Host(), false);
             var address = new Address
             {
                 Port = port,
@@ -70,57 +103,129 @@ namespace Server {
 
         // TODO: What to return? Is network manager responsible for command serialization?
         // should this return a IEnumerable<Command>?
-        public void PollEvents() {
+        public void PollEvents()
+        {
             Event netEvent;
             bool polled = false;
 
-            while(!polled) {
+            while (!polled)
+            {
                 // Check all events 
-                if (host.CheckEvents(out netEvent) <= 0) {
-                    if (host.Service(15, out netEvent) <= 0) {
+                if (host.CheckEvents(out netEvent) <= 0)
+                {
+                    if (host.Service(15, out netEvent) <= 0)
+                    {
                         break;
                     }
                     polled = true;
                 }
 
-                switch(netEvent.Type) {
+                switch (netEvent.Type)
+                {
                     case EventType.Connect:
-                        if (!isServer) {
+                        if (!isServer)
+                        {
                             Console.WriteLine("Connected to server!");
-                        } else {
-                            Console.WriteLine("Peer " + netEvent.Peer.ID + " connected!");
-                            remotePeers.Add(netEvent.Peer.ID);
-                            // Tell other clients about this client
-                            var bytes = new ClientConnectPacket[]{ new ClientConnectPacket { connected = true, magic = 0xcafe, peerID = netEvent.Peer.ID }};
-                            var packet = default(Packet);
-                            packet.Create(MemoryMarshal.Cast<ClientConnectPacket, byte>(bytes).ToArray());
-                            host.Broadcast(0, ref packet);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Peer " + netEvent.Peer.ID + " connected, will be assigned ID " + (remotePeers.Count + 1));
+                            var greeting = new ServerGreetingPacket
+                            {
+                                AssignedPlayerId = remotePeers.Count + 1,
+                            };
+                            var packet = NetworkPacket.Serialize(greeting);
+                            // Send only to the other client - it will send a HelloPacket to everyone later
+                            netEvent.Peer.Send(0, ref packet);
                         }
                         break;
                     case EventType.Disconnect:
                         Console.WriteLine("Peer " + netEvent.Peer.ID + " disconnected!");
-                        remotePeers.Remove(netEvent.Peer.ID);
+
+                        {
+                            var playerId = remotePeers.Where(client => client.Value.PeerId == netEvent.Peer.ID).First().Key;
+                            remotePeers.Remove(playerId);
+                        }
+
                         break;
                     case EventType.Timeout:
-                        if (isServer) {
+                        if (isServer)
+                        {
                             Console.WriteLine("Connection to peer " + netEvent.Peer.ID + " has timed out!");
-                            remotePeers.Remove(netEvent.Peer.ID);
-                        } else {
+                            var playerId = remotePeers.Where(client => client.Value.PeerId == netEvent.Peer.ID).First().Key;
+                            remotePeers.Remove(playerId);
+                        }
+                        else
+                        {
                             Console.WriteLine("Connection has timed out :(");
                         }
                         break;
                     case EventType.Receive:
                         Console.WriteLine("Packet received from " + netEvent.Peer.ID + " - Channel ID: " + netEvent.ChannelID + ", Data length: " + netEvent.Packet.Length);
 
-                        var data = new byte[netEvent.Packet.Length];
-                        netEvent.Packet.CopyTo(data);
-                        if (IsClientConnectStatus(data)) {
-                            var pack = MemoryMarshal.Cast<byte, ClientConnectPacket>(data);
-                            if (pack.Length != 1) {
-                                Console.WriteLine("Malformed client connection status package");
-                                break;
+                        var type = NetworkPacket.DetectType(netEvent.Packet);
+                        if (type == PacketType.ServerGreeting)
+                        {
+                            var greeting = NetworkPacket.Deserialize<ServerGreetingPacket>(netEvent.Packet);
+
+                            Console.WriteLine($"Received ServerGreeting. Our ID is {greeting.AssignedPlayerId}");
+
+                            myPlayerId = greeting.AssignedPlayerId;
+
+                            var myState = new Client
+                            {
+                                CurrentTurnDone = false,
+                                PeerId = netEvent.Peer.ID,
+                                PlayerId = greeting.AssignedPlayerId,
+                                State = ClientState.Waiting,
+                                PlayerName = "Player " + myPlayerId,
+                            };
+                            remotePeers.Add(greeting.AssignedPlayerId, myState);
+
+                            // Send Hello to everyone
+                            var hello = NetworkPacket.Serialize(new HelloPacket
+                            {
+                                PkgType = PacketType.Hello,
+                                ClientState = myState.State,
+                                PlayerId = myPlayerId,
+                                PlayerName = myState.PlayerName,
+                                CurrentTurnDone = myState.CurrentTurnDone,
+                            });
+                            host.Broadcast(0, ref hello);
+                        }
+                        else if (type == PacketType.Hello)
+                        {
+                            var hello = NetworkPacket.Deserialize<HelloPacket>(netEvent.Packet);
+
+                            Console.WriteLine($"Received Hello from {hello.PlayerName}");
+
+                            // If we don't know them yet, register them and send our own hello back
+                            if (!remotePeers.ContainsKey(hello.PlayerId))
+                            {
+                                var theirState = new Client
+                                {
+                                    CurrentTurnDone = hello.CurrentTurnDone,
+                                    PeerId = netEvent.Peer.ID,
+                                    PlayerId = hello.PlayerId,
+                                    State = hello.ClientState,
+                                    PlayerName = hello.PlayerName,
+                                };
+                                remotePeers.Add(hello.PlayerId, theirState);
+
+                                var myState = remotePeers[myPlayerId];
+                                // Send Hello back
+                                var ourHello = NetworkPacket.Serialize(new HelloPacket
+                                {
+                                    PkgType = PacketType.Hello,
+                                    ClientState = myState.State,
+                                    PlayerId = myPlayerId,
+                                    PlayerName = myState.PlayerName,
+                                    CurrentTurnDone = myState.CurrentTurnDone,
+                                });
+                                netEvent.Peer.Send(0, ref ourHello);
+
+                                Console.WriteLine("Greeted them back!");
                             }
-                            remotePeers.Add(pack[0].peerID);
                         }
 
                         netEvent.Packet.Dispose();
@@ -139,13 +244,19 @@ namespace Server {
             ENet.Library.Deinitialize();
         }
 
-        public IEnumerable<uint> GetConnectedClients()
+        public IEnumerable<int> GetConnectedClients()
         {
-            return remotePeers;
+            return remotePeers.Keys;
+        }
+
+        public IEnumerable<string> GetClientNames()
+        {
+            return remotePeers.Values.Select(c => c.PlayerName);
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
-        struct ClientConnectPacket {
+        struct ClientConnectPacket
+        {
             public ushort magic;
             public uint peerID;
             public bool connected;
@@ -153,8 +264,14 @@ namespace Server {
 
         // Length: 7
         // CA FE [4 byte ID] [1 for connected, 0 for disconnected]
-        private bool IsClientConnectStatus(byte[] data) {
+        private bool IsClientConnectStatus(byte[] data)
+        {
             return data[0] == 0xca && data[1] == 0xfe && data.Length == 7;
+        }
+
+        public bool IsServer()
+        {
+            return isServer;
         }
     }
 }

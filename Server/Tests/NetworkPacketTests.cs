@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Text;
 using Server;
 
@@ -25,9 +24,11 @@ public class Tests
     {
         var pack = new HelloPacket
         {
+            PkgType = PacketType.Hello,
             PlayerId = 1,
             ClientState = ClientState.Waiting,
             PlayerName = "bob",
+            CurrentTurnDone = false,
         };
         var serialized = NetworkPacket.Serialize(pack);
         var data = new byte[serialized.Length];
@@ -38,6 +39,7 @@ public class Tests
         Assert.That(deserialized.PlayerId, Is.EqualTo(1));
         Assert.That(deserialized.ClientState, Is.EqualTo(ClientState.Waiting));
         Assert.That(deserialized.PlayerName, Is.EqualTo("bob"));
+        Assert.That(deserialized.CurrentTurnDone, Is.EqualTo(false));
     }
 
     [Test]
@@ -75,6 +77,7 @@ public class Tests
             ClientState = ClientState.Ready,
             PlayerId = 1,
             PlayerName = "verylongnamethatmighttakelongertoserialize",
+            CurrentTurnDone = false,
         };
 
         var numPackets = 10000;
