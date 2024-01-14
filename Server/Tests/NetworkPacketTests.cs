@@ -8,19 +8,23 @@ public class Tests
 {
 
     [Test]
-    public void TestServerGreetingPacket() {
-        var pack = new ServerGreetingPacket {
+    public void TestServerGreetingPacket()
+    {
+        var pack = new ServerGreetingPacket
+        {
             AssignedPlayerId = 12,
         };
         var serialized = NetworkPacket.Serialize(pack);
         var deserialized = NetworkPacket.Deserialize<ServerGreetingPacket>(serialized);
-        
+
         Assert.That(deserialized.AssignedPlayerId, Is.EqualTo(12));
     }
 
     [Test]
-    public void TestHelloPacket() {
-        var pack = new HelloPacket{
+    public void TestHelloPacket()
+    {
+        var pack = new HelloPacket
+        {
             PlayerId = 1,
             ClientState = ClientState.Waiting,
             PlayerName = "bob",
@@ -37,7 +41,8 @@ public class Tests
     }
 
     [Test]
-    public void TestDetectType() {
+    public void TestDetectType()
+    {
         var bytes = Encoding.UTF8.GetBytes(@"{""PkgType"": ""Command"", ""OtherContent"": 1337, ""SomeList"": [1, 2, 3] }");
         using var packet = default(ENet.Packet);
         packet.Create(bytes);
@@ -48,7 +53,49 @@ public class Tests
     }
 
     [Test]
-    public void TestSerializationFail() {
-        // TODO
+    [Ignore("FIXME: how do we want to handle deserialization with the wrong type/format?")]
+    public void TestDeserializationFail()
+    {
+        var bytes = Encoding.UTF8.GetBytes(@"{""PkgType"": ""Command"", ""OtherContent"": 1337, ""SomeList"": [1, 2, 3] }");
+        using var packet = default(ENet.Packet);
+        packet.Create(bytes);
+
+        Assert.Catch(() =>
+        {
+            var p = NetworkPacket.Deserialize<HelloPacket>(packet);
+        });
+    }
+
+    [Test]
+    public void TestPerf()
+    {
+        var packet = new HelloPacket()
+        {
+            PkgType = PacketType.Hello,
+            ClientState = ClientState.Ready,
+            PlayerId = 1,
+            PlayerName = "verylongnamethatmighttakelongertoserialize",
+        };
+
+        // TODO: refactor into clock class
+        var begin = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var numPackets = 10000;
+        var maxTime = 100;
+        long bytes = 0;
+
+        for (int i = 0; i < numPackets; i++)
+        {
+            var serialized = NetworkPacket.Serialize(packet);
+            bytes += serialized.Length;
+            var deserialized = NetworkPacket.Deserialize<HelloPacket>(serialized);
+            Assert.That(deserialized.PlayerId, Is.EqualTo(1));
+        }
+
+        var end = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var diff = end - begin;
+
+        Console.WriteLine($"Serializing {numPackets} ({bytes} bytes) took {diff}ms!");
+
+        Assert.That(diff, Is.LessThan(maxTime), $"Serialization of {numPackets} took longer than {maxTime}ms!");
     }
 }
