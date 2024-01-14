@@ -1,17 +1,27 @@
 namespace Simulation {
-    // In reality, there would have to be more than one command
-    // This is a simple move command
+    
+    public enum CommandType {
+        Select,
+        Deselect,
+        BoxSelect,
+        MoveCommand,
+    }
+
     public struct Command
     {
         public int PlayerId;
+        public int TargetTurn;
+        public CommandType CommandType;
+
         public long TargetX;
         public long TargetY;
+        public long BoxX;
+        public long BoxY;
 
-        public int TargetTurn;
 
         public override string ToString()
         {
-            return $"Command: id={PlayerId}, tx={TargetX}, ty={TargetY}, turn={TargetTurn}";
+            return $"Command: id={PlayerId}, turn={TargetTurn}, type={CommandType}, tx={TargetX}, ty={TargetY}, boxX={BoxX}, boxY={BoxY}";
         }
     }
 }

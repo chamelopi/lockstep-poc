@@ -1,11 +1,5 @@
 # Tasks
 
-1. Refactor Command class to allow different types of commands
-   - select
-   - deselect
-   - box select
-   - move command
-   - (more later)
 2. Implement those commands in the client
    - select
    - deselect
