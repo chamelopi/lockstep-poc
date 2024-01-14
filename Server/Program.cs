@@ -47,8 +47,6 @@ namespace Server
 
         public static void Run(string? replay, bool server, string? host)
         {
-            // TODO: Implement ENet Server after this example: https://github.com/nxrighthere/ENet-CSharp#net-environment
-
             // Init rendering
             Raylib.InitWindow(1280, 1024, "Simulation");
             var camera = new Camera3D(new Vector3(50.0f, 50.0f, 50.0f), Vector3.Zero, Vector3.UnitY, 45, CameraProjection.CAMERA_PERSPECTIVE);
