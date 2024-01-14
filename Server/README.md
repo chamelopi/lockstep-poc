@@ -31,11 +31,11 @@ START GAME message:
 - tell all clients that the first simulation turn starts (NEXT TURN)
 - all clients need to be ready first (READY)
 
-TODO: How to handle entities spawing and despawning? Find a deterministic algorithm for assigning IDs maybe (we can first test this with a purely local simulation)
-- Spawning could be a command in some cases, in other caes it will be automatically during simulation. Order of this will have to be defined
+#### How to handle entities spawing and despawning? Find a deterministic algorithm for assigning IDs maybe (we can first test this with a purely local simulation)
+- Spawning could be a command in some cases, in other cases it will be automatically during simulation. We have to support both. The order spawning objects of this will have to be deterministic, too.
 - De-spawning will occur on death, destruction, resource harvesting, etc. This might be tricky to get right
 
-Every turn:
+#### Every turn
 - TODO: Do like the AoE paper says :D
 - Collect inputs and broadcast them to the other player's sims (INPUT/COMMAND)
 - Sync turn increments (NEXT TURN)

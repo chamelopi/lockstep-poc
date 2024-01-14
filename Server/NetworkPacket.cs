@@ -1,33 +1,56 @@
-using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using ENet;
 
 namespace Server
 {
-    public interface NetworkPacket
-    {
-        public abstract static ushort getMagic();
 
-        public static T deserialize<T>(Packet packet) where T : struct, NetworkPacket
+    public enum PacketType
+    {
+        ServerGreeting,
+        Hello,
+        Command,
+    }
+
+    public class NetworkPacket
+    {
+        public static JsonSerializerOptions options = new()
+        {
+            MaxDepth = 10,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        };
+        static NetworkPacket() {
+            options.Converters.Add(new JsonStringEnumConverter());
+        }
+
+        public PacketType PkgType { get; set; }
+
+        public static Packet Serialize<T>(T networkPacket) where T : NetworkPacket
+        {
+            var json = JsonSerializer.Serialize(networkPacket, options);
+            var bytes = Encoding.UTF8.GetBytes(json);
+            var packet = default(Packet);
+            packet.Create(bytes);
+            return packet;
+        }
+
+        public static PacketType? DetectType(Packet packet)
         {
             var data = new byte[packet.Length];
             packet.CopyTo(data);
-            // TODO: Assumes that the short is stored in little endian
-            ushort magic = (ushort)(data[0] | data[1] << 8);
-
-            if (T.getMagic() != magic)
-            {
-                throw new ArgumentException("Corrupt packet, expected magic " + T.getMagic().ToString("x") + " got " + magic.ToString("x"));
-            }
-
-            return MemoryMarshal.Cast<byte, T>(data)[0];
+            var str = Encoding.UTF8.GetString(data);
+            var obj = JsonSerializer.Deserialize<NetworkPacket>(str, options);
+            return obj?.PkgType;
         }
 
-        public static Packet Serialize<T>(T networkPacket) where T : struct, NetworkPacket
+        public static T Deserialize<T>(Packet packet) where T : NetworkPacket
         {
-            var bytes = new T[] { networkPacket };
-            var packet = default(Packet);
-            packet.Create(MemoryMarshal.Cast<T, byte>(bytes).ToArray());
-            return packet;
+            var data = new byte[packet.Length];
+            packet.CopyTo(data);
+            var str = Encoding.UTF8.GetString(data);
+            var obj = JsonSerializer.Deserialize<T>(str, options);
+            return obj!;
         }
     }
 
@@ -35,35 +58,25 @@ namespace Server
     /**
      * Sent by server to assign player ID.
      */
-    public struct ServerGreetingPacket : NetworkPacket
+    [Serializable]
+    public class ServerGreetingPacket : NetworkPacket
     {
-        public ushort magic;
-        public int assignedPlayerId;
-
-        public static ushort getMagic()
-        {
-            return 0xcaf0;
-        }
+        public int AssignedPlayerId { get; set; }
     }
 
     /**
      * Sent by server or client to indicate any kind of error
      */
-    public struct ErrorPacket : NetworkPacket
+    [Serializable]
+    public class ErrorPacket : NetworkPacket
     {
-        public ushort magic;
-        public byte playerId;
-        public byte hostId;
-        public ushort errorCode;
-
-        public static ushort getMagic()
-        {
-            return 0xcaf1;
-        }
+        public byte PlayerId { get; set; }
+        public byte HostId { get; set; }
+        public ushort ErrorCode { get; set; }
 
         public string GetErrorMessage()
         {
-            return errorCode switch
+            return ErrorCode switch
             {
                 0 => "OK",
                 1 => "Too many players on server already, cannot join!",
@@ -72,36 +85,34 @@ namespace Server
         }
     }
 
-    public struct HelloPacket : NetworkPacket
+    [Serializable]
+    public enum ClientState
     {
-        public static ushort getMagic()
-        {
-            return 0xcaf2;
-        }
-        public ushort magic;
-        public byte playerId;
-        public byte clientState;
-        // TODO: Can MemoryMarshal serialize this ootb or do we need char array?
-        public string playerName;
-
-
-
-        // TODO: Implement
+        Disconnected,
+        Waiting,
+        Ready,
+        InGame,
     }
 
-    public struct StateChangePacket : NetworkPacket
+    /**
+     * Sent by all clients on every new connect to notify them about their current state.
+     */
+    [Serializable]
+    public class HelloPacket : NetworkPacket
     {
-        public ushort magic;
-        public byte playerId;
-        public byte newClientState;
-
-        public static ushort getMagic()
-        {
-            return 0xcaf3;
-        }
+        public byte PlayerId { get; set; }
+        public ClientState ClientState { get; set; }
+        public string PlayerName { get; set; }
     }
 
-    public struct StartGamePacket 
+    public class StateChangePacket : NetworkPacket
+    {
+        public byte PlayerId { get; set; }
+        public byte NewClientState { get; set; }
+
+    }
+
+    public class StartGamePacket
     {
         // TODO: Implement
 
@@ -112,7 +123,7 @@ namespace Server
      *
      * This may be movement commands, building placement, unit creation, etc.
      */
-    public struct CommandPacket
+    public class CommandPacket
     {
         // TODO: Implement
     }
@@ -121,7 +132,7 @@ namespace Server
      * Tells other players that this player finished sending inputs for their turn. Once every player
      * finished the turn, all players are allowed to advance their simulation by one step.
      */
-    public struct EndOfTurnPacket
+    public class EndOfTurnPacket
     {
         // TODO: Implement
     }
