@@ -17,8 +17,8 @@ namespace Server
 
         static readonly int GroundSize = 80;
 
-
-        static int uiPlayerID = 0;
+        // Server or local player is always player 1
+        static int uiPlayerID = 1;
 
 
         private static RayCollision CollideGround(Camera3D cam)
@@ -76,6 +76,11 @@ namespace Server
                 networkManager = new NoopNetworkManager();
                 Console.WriteLine("Started without network!");
             }
+            // Listen for our player id and set it accordingly
+            networkManager.AddCallback(PacketType.ServerGreeting, (packet) => {
+                uiPlayerID = ((ServerGreetingPacket)packet).AssignedPlayerId;
+                Console.WriteLine("We are player " + uiPlayerID);
+            });
 
             while (!Raylib.WindowShouldClose())
             {
@@ -141,15 +146,16 @@ namespace Server
             if (coll.Hit)
             {
                 // Check for entities in the close proximity
-                int i = 0;
                 bool hit = false;
-                foreach (var entity in sim.currentState.Entities)
+                for (int i = 0; i < sim.currentState.Entities.Count; i++)
                 {
                     // Guard against selecting other player's entities.
                     // TODO: Replace this with ownership check once we have more than once entity per player
-                    if (i != uiPlayerID) {
+                    if ((i+1) != uiPlayerID) {
                         continue;
                     }
+
+                    var entity = sim.currentState.Entities[i];
 
                     var dist = Distance(entity.X, entity.Y, coll.Point.X, coll.Point.Z);
                     if (dist < FixedPointUtil.One * 2)
@@ -169,7 +175,6 @@ namespace Server
                         Console.WriteLine($"New command: selected entity {i}");
                         break;
                     }
-                    i++;
                 }
 
                 // If we hit nothing, deselect

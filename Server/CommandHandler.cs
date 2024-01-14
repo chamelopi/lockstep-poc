@@ -28,7 +28,7 @@ namespace Simulation
         private static void HandleSelectCommand(SimulationState currentState, Command command)
         {
             currentState.SelectedEntities.Clear();
-            currentState.SelectedEntities.Add(command.PlayerId);
+            currentState.SelectedEntities.Add(command.PlayerId-1);
         }
 
         private static void HandleDeselectCommand(SimulationState currentState)

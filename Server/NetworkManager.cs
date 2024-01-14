@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using ENet;
 using Simulation;
+using UnityEngine.UIElements;
 
 namespace Server
 {
@@ -11,6 +12,10 @@ namespace Server
         public IEnumerable<int> GetConnectedClients();
         public IEnumerable<string> GetClientNames();
         public bool IsServer();
+        public void AddCallback(PacketType type, PacketHandler handler);
+        public void RemoveCallback(PacketType type);
+
+        public delegate void PacketHandler(NetworkPacket packet);
     }
 
     /**
@@ -18,6 +23,11 @@ namespace Server
      */
     public class NoopNetworkManager : INetworkManager
     {
+        public void AddCallback(PacketType type, INetworkManager.PacketHandler handler)
+        {
+            // Do nothing - no network events ever happen
+        }
+
         public void Dispose()
         {
             // Do nothing
@@ -42,6 +52,11 @@ namespace Server
         {
             // do nothing
         }
+
+        public void RemoveCallback(PacketType type)
+        {
+            // Do nothing - no network events ever happen
+        }
     }
 
     // We will probably have another NetworkManager for DOTSNet/Mirror
@@ -54,6 +69,7 @@ namespace Server
         private Peer? peer;
 
         private Dictionary<int, Client> remotePeers;
+        private Dictionary<PacketType, INetworkManager.PacketHandler> callbacks;
         private int myPlayerId;
 
         private ENetNetworkManager(Host host, bool isServer)
@@ -62,6 +78,7 @@ namespace Server
             this.host = host;
             this.isServer = isServer;
             this.remotePeers = new();
+            this.callbacks = new();
         }
 
 
@@ -192,6 +209,8 @@ namespace Server
                                 CurrentTurnDone = myState.CurrentTurnDone,
                             });
                             host.Broadcast(0, ref hello);
+
+                            CallHandler(type, greeting);
                         }
                         else if (type == PacketType.Hello)
                         {
@@ -226,6 +245,8 @@ namespace Server
 
                                 Console.WriteLine("Greeted them back!");
                             }
+
+                            CallHandler(type, hello);
                         }
 
                         netEvent.Packet.Dispose();
@@ -233,6 +254,13 @@ namespace Server
                     default:
                         break;
                 }
+            }
+        }
+
+        private void CallHandler(PacketType? type, NetworkPacket hello)
+        {
+            if (type != null && callbacks.ContainsKey(type.Value)) {
+                callbacks[type.Value](hello);
             }
         }
 
@@ -254,24 +282,19 @@ namespace Server
             return remotePeers.Values.Select(c => c.PlayerName);
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 4)]
-        struct ClientConnectPacket
-        {
-            public ushort magic;
-            public uint peerID;
-            public bool connected;
-        }
-
-        // Length: 7
-        // CA FE [4 byte ID] [1 for connected, 0 for disconnected]
-        private bool IsClientConnectStatus(byte[] data)
-        {
-            return data[0] == 0xca && data[1] == 0xfe && data.Length == 7;
-        }
-
         public bool IsServer()
         {
             return isServer;
+        }
+
+        public void AddCallback(PacketType type, INetworkManager.PacketHandler handler)
+        {
+            callbacks.Add(type, handler);
+        }
+
+        public void RemoveCallback(PacketType type)
+        {
+            callbacks.Remove(type);
         }
     }
 }

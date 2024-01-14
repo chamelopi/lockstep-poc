@@ -130,7 +130,7 @@ namespace Simulation
 
         private void HandleCommand(Command command)
         {
-            if (command.PlayerId < 0 || command.PlayerId >= this.playerCount)
+            if (command.PlayerId <= 0 || command.PlayerId > this.playerCount)
             {
                 // TODO: Handle this error somehow?
                 Console.WriteLine($"invalid player ID {command.PlayerId} in command! Discarding command");
