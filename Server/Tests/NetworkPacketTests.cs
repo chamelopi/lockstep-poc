@@ -3,7 +3,7 @@ using Server;
 
 namespace Tests;
 
-public class Tests
+public class NetworkPacketTests
 {
 
     [Test]
