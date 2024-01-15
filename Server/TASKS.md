@@ -12,3 +12,5 @@
    - allow player to kill entities (debug function)
 9. Implement box select command
 10. Implement checksum calculation for Simulation State
+11. proper logging: `dotnet add package Microsoft.Extensions.Logging`
+    - https://learn.microsoft.com/en-us/dotnet/core/extensions/logging?tabs=command-line
