@@ -8,6 +8,7 @@ public interface INetworkManager : IDisposable
     public void PollEvents();
     public IEnumerable<int> GetConnectedClients();
     public IEnumerable<string> GetClientNames();
+    public int GetLocalPlayer();
     public bool IsServer();
     public void AddCallback(PacketType type, PacketHandler handler);
     public void RemoveCallback(PacketType type);
@@ -38,6 +39,12 @@ public class NoopNetworkManager : INetworkManager
     public IEnumerable<int> GetConnectedClients()
     {
         return new List<int>();
+    }
+
+    public int GetLocalPlayer()
+    {
+        // Local player is always 1 when not in multiplayer
+        return 1;
     }
 
     public bool IsServer()
@@ -294,5 +301,10 @@ public class ENetNetworkManager : INetworkManager
     public void RemoveCallback(PacketType type)
     {
         callbacks.Remove(type);
+    }
+
+    public int GetLocalPlayer()
+    {
+        return myPlayerId;
     }
 }
