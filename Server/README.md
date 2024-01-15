@@ -11,22 +11,7 @@ see https://docs.unity3d.com/Manual/UsingDLL.html
 4. ???
 5. Does not work :(
 
-## Network protocol outline
-
-Most messages are broadcasted to all clients. Clients take note of their own and other client's states.
-
-On connect:
-- If server, send SERVER GREETING to client, assigning a new player ID.
-- New player broadcasts a HELLO package. This will tell all other clients about it and its ID.
-- Other clients take note of the new peer and respond with their own ID, allowing the player to register them and their state
-- All clients start in the game in the state WAITING.
-  - They load/generate the game world. In HGLG, we could probably just transmit the world seed for random maps.
-  - Once they're done, they broadcast a READY message and transition to state ready
-- The first clients who connects becomes the host and may start the game
-
-START GAME message:
-- tell all clients that the first simulation turn starts (NEXT TURN)
-- all clients need to be ready first (READY)
+## Networking notes
 
 #### How to handle entities spawing and despawning? Find a deterministic algorithm for assigning IDs maybe (we can first test this with a purely local simulation)
 - Spawning could be a command in some cases, in other cases it will be automatically during simulation. We have to support both. The order spawning objects of this will have to be deterministic, too.

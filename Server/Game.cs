@@ -10,10 +10,9 @@ public class Game
     static readonly int GroundSize = 80;
     static readonly int TurnSpeedIncrement = 10;
 
-
     private Simulation.Simulation sim;
     private INetworkManager networkManager;
-    private Camera3D camera;
+    private Camera3D camera;    
 
     public Game(Simulation.Simulation sim, INetworkManager networkManager, Camera3D camera)
     {
