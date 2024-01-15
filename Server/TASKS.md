@@ -1,10 +1,5 @@
 # Tasks
 
-5. Implement Command serialization
-   - Serialize to json, deserialize from json
-   - Refactor current replay mechanic to use json
-   - adjust testreplay file to use json
-   - write unit tests
 6. Implement dummy logic for map loading (stubs only)
    - when connected, the server should tell the player the current map
    - server should be able to set the map (i.e. change it for everyone) when in Waiting/Ready state
