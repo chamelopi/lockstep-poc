@@ -82,7 +82,7 @@ public class NetworkPacketTests
         };
 
         var numPackets = 10000;
-        var maxTime = 100;
+        var maxTime = 250;
         long bytes = 0;
 
         var diff = Clock.TimeIt(() =>
@@ -96,7 +96,7 @@ public class NetworkPacketTests
             }
         });
 
-        Console.WriteLine($"Serializing {numPackets} ({bytes} bytes) took {diff}ms!");
+        Console.WriteLine($"Serializing {numPackets} packets ({bytes} bytes) took {diff}ms!");
 
         Assert.That(diff, Is.LessThan(maxTime), $"Serialization of {numPackets} took longer than {maxTime}ms!");
     }

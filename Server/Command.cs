@@ -8,7 +8,7 @@ public enum CommandType
     Select,
     Deselect,
     BoxSelect,
-    MoveCommand,
+    Move,
 }
 
 public struct Command

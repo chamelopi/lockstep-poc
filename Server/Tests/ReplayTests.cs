@@ -12,7 +12,7 @@ public class ReplayTests {
             PlayerId = 1,
         });
         sim.AddCommand(new Command {
-            CommandType = CommandType.MoveCommand,
+            CommandType = CommandType.Move,
             TargetTurn = 20,
             PlayerId = 1,
             TargetX = 125423056,
@@ -23,6 +23,9 @@ public class ReplayTests {
 
         sim.SaveReplay(filename);
 
-        // TODO: Assert file contents
+        var expectedContents = @"[{""PlayerId"":1,""TargetTurn"":2,""CommandType"":""Select"",""TargetX"":0,""TargetY"":0,""BoxX"":0,""BoxY"":0},{""PlayerId"":1,""TargetTurn"":20,""CommandType"":""Move"",""TargetX"":125423056,""TargetY"":130503525,""BoxX"":0,""BoxY"":0}]";
+        var actualContents = File.ReadAllText(filename);
+
+        Assert.That(actualContents, Is.EqualTo(expectedContents));
     }
 }

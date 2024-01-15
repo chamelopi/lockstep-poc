@@ -207,7 +207,7 @@ class Server
             var cmd = new Simulation.Command
             {
                 PlayerId = uiPlayerID,
-                CommandType = CommandType.MoveCommand,
+                CommandType = CommandType.Move,
                 TargetX = ToFixed(coll.Point.X),
                 TargetY = ToFixed(coll.Point.Z),
                 // Queue up commands for two turns in the future!

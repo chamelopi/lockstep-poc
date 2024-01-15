@@ -16,7 +16,7 @@ namespace Simulation;
                 case CommandType.Deselect:
                     HandleDeselectCommand(currentState);
                     break;
-                case CommandType.MoveCommand:
+                case CommandType.Move:
                     HandleMoveCommand(currentState, command);
                     break;
                 default:
