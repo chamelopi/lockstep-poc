@@ -58,7 +58,9 @@ class Server
             Console.WriteLine("Started without network!");
         }
 
-        Scene? currentScene = new Game(sim, networkManager, camera);
+        Scene? currentScene = networkManager.GetType() == typeof(NoopNetworkManager)
+            ? new GameScene(sim, networkManager, camera)
+            : new WaitingScene(sim, networkManager, camera);
         do {
             currentScene = currentScene.Run();
         } while(currentScene != null);

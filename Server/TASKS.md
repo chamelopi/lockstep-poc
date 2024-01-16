@@ -1,12 +1,7 @@
 # Tasks
 
 5. We need some sort of state management
-   - States:
-     - NotConnected: (only when started without args) - show main menu for single player/host/connect
-     - Waiting: When connected to server/clients or single player has just been started. Loads/Generates the map (dummy action for now)
-     - Ready: Map has been loaded & once everyone is ready we can start. Immediately transitions to InGame when in single player
-     - InGame: Normal game view, simulation is running here
-   - TODO: Who is responsible for the state management? NetworkManager or some local class?
+   - Send state updates via NetworkManager
 6. Implement dummy logic for map loading (stubs only)
    - when connected, the server should tell the player the current map
    - server should be able to set the map (i.e. change it for everyone) when in Waiting/Ready state

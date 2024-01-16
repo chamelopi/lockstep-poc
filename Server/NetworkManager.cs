@@ -7,7 +7,7 @@ public interface INetworkManager : IDisposable
 {
     public void PollEvents();
     public IEnumerable<int> GetConnectedClients();
-    public IEnumerable<string> GetClientNames();
+    public IEnumerable<Client> GetClients();
     public int GetLocalPlayer();
     public bool IsServer();
     public void AddCallback(PacketType type, PacketHandler handler);
@@ -21,6 +21,15 @@ public interface INetworkManager : IDisposable
  */
 public class NoopNetworkManager : INetworkManager
 {
+    private Client myClient = new Client
+    {
+        CurrentTurnDone = false,
+        PeerId = 0,
+        PlayerId = 1,
+        PlayerName = "Player 1",
+        State = ClientState.Waiting,
+    };
+
     public void AddCallback(PacketType type, INetworkManager.PacketHandler handler)
     {
         // Do nothing - no network events ever happen
@@ -31,14 +40,14 @@ public class NoopNetworkManager : INetworkManager
         // Do nothing
     }
 
-    public IEnumerable<string> GetClientNames()
+    public IEnumerable<Client> GetClients()
     {
-        return new List<string>();
+        return new List<Client>{ myClient };
     }
 
     public IEnumerable<int> GetConnectedClients()
     {
-        return new List<int>();
+        return new List<int>( 1 );
     }
 
     public int GetLocalPlayer()
@@ -283,9 +292,9 @@ public class ENetNetworkManager : INetworkManager
         return remotePeers.Keys;
     }
 
-    public IEnumerable<string> GetClientNames()
+    public IEnumerable<Client> GetClients()
     {
-        return remotePeers.Values.Select(c => c.PlayerName);
+        return remotePeers.Values;
     }
 
     public bool IsServer()

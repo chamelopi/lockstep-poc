@@ -5,7 +5,7 @@ using static Simulation.FixedPointUtil;
 
 namespace Server;
 
-public class Game : Scene
+public class GameScene : Scene
 {
     static readonly int GroundSize = 80;
     static readonly int TurnSpeedIncrement = 10;
@@ -14,7 +14,7 @@ public class Game : Scene
     private INetworkManager networkManager;
     private Camera3D camera;    
 
-    public Game(Simulation.Simulation sim, INetworkManager networkManager, Camera3D camera)
+    public GameScene(Simulation.Simulation sim, INetworkManager networkManager, Camera3D camera)
     {
         this.sim = sim;
         this.networkManager = networkManager;
