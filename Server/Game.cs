@@ -5,7 +5,7 @@ using static Simulation.FixedPointUtil;
 
 namespace Server;
 
-public class Game
+public class Game : Scene
 {
     static readonly int GroundSize = 80;
     static readonly int TurnSpeedIncrement = 10;
@@ -21,7 +21,7 @@ public class Game
         this.camera = camera;
     }
 
-    public void Run()
+    public Scene? Run()
     {
         while (!Raylib.WindowShouldClose())
         {
@@ -32,6 +32,8 @@ public class Game
 
             RenderGameState();
         }
+
+        return null;
     }
 
     void HandleInput()

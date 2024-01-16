@@ -58,7 +58,10 @@ class Server
             Console.WriteLine("Started without network!");
         }
 
-        new Game(sim, networkManager, camera).Run();
+        Scene? currentScene = new Game(sim, networkManager, camera);
+        do {
+            currentScene = currentScene.Run();
+        } while(currentScene != null);
 
         Raylib.CloseWindow();
         networkManager.Dispose();
