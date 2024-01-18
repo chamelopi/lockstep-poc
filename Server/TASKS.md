@@ -1,7 +1,6 @@
 # Tasks
 
 7. Transfer commands over network
-    - Broadcast commands to other players
     - Sync turn ends
 7. Refactor NetworkPacket deserialization to auto-detect type & choose appropriate class
 7. Fix rare bug where Ready packet arrives before Hello packet -> KeyNotFoundException
