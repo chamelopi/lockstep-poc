@@ -11,6 +11,7 @@ public class ENetNetworkManager : INetworkManager
     private Dictionary<int, Client> remotePeers;
     private Dictionary<PacketType, INetworkManager.PacketHandler> callbacks;
     private int myPlayerId;
+    public int lastTurnSignaled = -1;
 
     private ENetNetworkManager(Host host, bool isServer)
     {
@@ -212,6 +213,12 @@ public class ENetNetworkManager : INetworkManager
                     {
                         CallHandler(type, NetworkPacket.Deserialize<CommandPacket>(netEvent.Packet));
                     }
+                    else if (type == PacketType.EndOfTurn)
+                    {
+                        var endOfTurn = NetworkPacket.Deserialize<EndOfTurnPacket>(netEvent.Packet);
+                        Console.WriteLine($"Player {endOfTurn.PlayerId} is done with their turn {endOfTurn.CurrentTurn}!");
+                        remotePeers[endOfTurn.PlayerId].CurrentTurnDone = true;
+                    }
                     netEvent.Packet.Dispose();
                     break;
                 default:
@@ -312,5 +319,25 @@ public class ENetNetworkManager : INetworkManager
             peer.Value.CurrentTurnDone = false;
         }
         return true;
+    }
+
+    public void SignalNextTurn(int currentTurn)
+    {
+        if (lastTurnSignaled < currentTurn)
+        {
+            var pack = NetworkPacket.Serialize(new EndOfTurnPacket()
+            {
+                PkgType = PacketType.EndOfTurn,
+                PlayerId = myPlayerId,
+                CurrentTurn = currentTurn,
+            });
+
+            // Set local instance of this client ready, too
+            remotePeers[myPlayerId].CurrentTurnDone = true;
+            
+            host.Broadcast(0, ref pack);
+            lastTurnSignaled = currentTurn;
+            Console.WriteLine($"Player {myPlayerId} is done with Turn {currentTurn}");
+        }
     }
 }

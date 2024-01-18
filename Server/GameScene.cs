@@ -31,7 +31,7 @@ public class GameScene : Scene
 
         while (!Raylib.WindowShouldClose())
         {
-            sim.RunSimulation();
+            RunSimulation();
 
             HandleInput();
             networkManager.PollEvents();
@@ -92,12 +92,14 @@ public class GameScene : Scene
         var commandPacket = (CommandPacket)packet;
         Console.WriteLine($"Remote command received! {commandPacket.Command}");
 
-        if (commandPacket.Command.TargetTurn < sim.currentTurn) {
+        if (commandPacket.Command.TargetTurn < sim.currentTurn)
+        {
             Console.WriteLine($"ERROR: Received command for past turn: {commandPacket.Command.TargetTurn}. Discarding it.");
             return;
         }
 
-        if (commandPacket.PlayerId != commandPacket.PlayerId) {
+        if (commandPacket.PlayerId != commandPacket.PlayerId)
+        {
             Console.WriteLine($"ERROR: Received command for {commandPacket.PlayerId} from player {commandPacket.PlayerId}!");
             return;
         }
@@ -198,6 +200,35 @@ public class GameScene : Scene
             };
             AddCommand(cmd);
             Console.WriteLine($"New command: move to {cmd.TargetX}/{cmd.TargetY}");
+        }
+    }
+
+    private void RunSimulation()
+    {
+        if (sim.isPaused)
+        {
+            return;
+        }
+
+        // TODO: Refactor into clock?
+        long timeSinceLastStep = 0;
+
+        // Fixed time step
+        var startFrame = Clock.GetTicks();
+        timeSinceLastStep += startFrame - sim.lastTurnTimestamp;
+
+        if (timeSinceLastStep > sim.turnSpeedMs)
+        {
+            // Signal next turn to other players and advance once we are allowed
+            networkManager.SignalNextTurn(sim.currentTurn);
+            if (networkManager.CanAdvanceTurn()) {
+                sim.lastTurnTimestamp += sim.turnSpeedMs;
+
+                sim.Step();
+
+                // We might disable this for a release build
+                sim.CheckDeterminism();
+            }
         }
     }
 

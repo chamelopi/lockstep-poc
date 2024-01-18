@@ -79,31 +79,6 @@ public class Simulation
         allCommands.AddRange(commands);
     }
 
-    public void RunSimulation()
-    {
-        if (isPaused)
-        {
-            return;
-        }
-
-        // TODO: Refactor into clock?
-        long timeSinceLastStep = 0;
-
-        // Fixed time step
-        var startFrame = Clock.GetTicks();
-        timeSinceLastStep += startFrame - lastTurnTimestamp;
-
-        while (timeSinceLastStep > turnSpeedMs)
-        {
-            timeSinceLastStep -= turnSpeedMs;
-            lastTurnTimestamp += turnSpeedMs;
-            Step();
-
-            // We might disable this for a release build
-            CheckDeterminism();
-        }
-    }
-
     public void Step()
     {
         currentTurn++;

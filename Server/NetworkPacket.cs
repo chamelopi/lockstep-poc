@@ -13,6 +13,8 @@ public enum PacketType
     Command,
     StateChange,
     StartGame,
+    EndOfTurn,
+
 }
 
 // TODO: Can we ensure that 'PkgType' is always correctly filled on serialization?

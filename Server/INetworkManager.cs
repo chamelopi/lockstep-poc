@@ -37,6 +37,11 @@ public interface INetworkManager : IDisposable
      * Automatically resets all player's states on this client to indicate that the others are NOT done with the next turn.
      */
     public bool CanAdvanceTurn();
+    /**
+     * Signal to other players that this client elapsed its turn time, and that it is ready to advance to the next turn
+     */
+    public void SignalNextTurn(int currentTurn);
+
 
     delegate void PacketHandler(NetworkPacket packet);
 }

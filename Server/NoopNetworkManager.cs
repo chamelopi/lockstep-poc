@@ -75,4 +75,9 @@ public class NoopNetworkManager : INetworkManager
         // In local simulation, we don't have to wait for anyone, so we can always advance the simulation.
         return true;
     }
+
+    public void SignalNextTurn(int currentTurn)
+    {
+        // Do nothing
+    }
 }
