@@ -1,11 +1,9 @@
 # Tasks
 
-5. We need some sort of state management
-   - Send state updates via NetworkManager
 6. Implement dummy logic for map loading (stubs only)
-   - when connected, the server should tell the player the current map
-   - server should be able to set the map (i.e. change it for everyone) when in Waiting/Ready state
-   - clients become ready when they completed loading the map
+   - Do an arbitrary, short wait & then change own state to ready (later this will be replaced with map gen/loading)
+   - Have server send out `StartGame` packet once everyone is ready
+   - Only transition state if the `StartGame` packet is received
 7. Transfer commands over network
 8. Split EntityID and PlayerID
    - i.e. allow multiple Entities per Player

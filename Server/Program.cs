@@ -63,6 +63,9 @@ class Server
             : new WaitingScene(sim, networkManager, camera);
         do {
             currentScene = currentScene.Run();
+            if (currentScene != null) {
+                networkManager.UpdateLocalState(currentScene.GetState());
+            }
         } while(currentScene != null);
 
         Raylib.CloseWindow();

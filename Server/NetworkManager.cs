@@ -6,14 +6,15 @@ namespace Server;
 public interface INetworkManager : IDisposable
 {
     public void PollEvents();
-    public IEnumerable<int> GetConnectedClients();
+    public IEnumerable<int> GetPlayerIds();
     public IEnumerable<Client> GetClients();
     public int GetLocalPlayer();
     public bool IsServer();
     public void AddCallback(PacketType type, PacketHandler handler);
     public void RemoveCallback(PacketType type);
+    public void UpdateLocalState(ClientState state);
 
-    public delegate void PacketHandler(NetworkPacket packet);
+    delegate void PacketHandler(NetworkPacket packet);
 }
 
 /**
@@ -45,7 +46,7 @@ public class NoopNetworkManager : INetworkManager
         return new List<Client>{ myClient };
     }
 
-    public IEnumerable<int> GetConnectedClients()
+    public IEnumerable<int> GetPlayerIds()
     {
         return new List<int>( 1 );
     }
@@ -69,6 +70,11 @@ public class NoopNetworkManager : INetworkManager
     public void RemoveCallback(PacketType type)
     {
         // Do nothing - no network events ever happen
+    }
+
+    public void UpdateLocalState(ClientState state)
+    {
+        myClient.State = state;
     }
 }
 
@@ -160,6 +166,7 @@ public class ENetNetworkManager : INetworkManager
                     }
                     else
                     {
+                        // TODO: This logic will break if we automatically handle disconnects - peer IDs might change!
                         Console.WriteLine("Peer " + netEvent.Peer.ID + " connected, will be assigned ID " + (remotePeers.Count + 1));
                         var greeting = new ServerGreetingPacket
                         {
@@ -197,6 +204,12 @@ public class ENetNetworkManager : INetworkManager
                     var type = NetworkPacket.DetectType(netEvent.Packet);
                     if (type == PacketType.ServerGreeting)
                     {
+                        if (isServer) {
+                            Console.WriteLine("ERROR: Received ServerGreeting as Server, ignoring!");
+                            netEvent.Packet.Dispose();
+                            break;
+                        }
+
                         var greeting = NetworkPacket.Deserialize<ServerGreetingPacket>(netEvent.Packet);
 
                         Console.WriteLine($"Received ServerGreeting. Our ID is {greeting.AssignedPlayerId}");
@@ -261,8 +274,13 @@ public class ENetNetworkManager : INetworkManager
                         }
 
                         CallHandler(type, hello);
-                    }
+                    } else if (type == PacketType.StateChange) {
+                        var stateChange = NetworkPacket.Deserialize<StateChangePacket>(netEvent.Packet);
+                        Console.WriteLine($"Received StateChange from {stateChange.PlayerId}: {stateChange.NewClientState}");
+                        remotePeers[stateChange.PlayerId].State = stateChange.NewClientState;
 
+                        CallHandler(type, stateChange);
+                    }
                     netEvent.Packet.Dispose();
                     break;
                 default:
@@ -287,7 +305,7 @@ public class ENetNetworkManager : INetworkManager
         ENet.Library.Deinitialize();
     }
 
-    public IEnumerable<int> GetConnectedClients()
+    public IEnumerable<int> GetPlayerIds()
     {
         return remotePeers.Keys;
     }
@@ -315,5 +333,17 @@ public class ENetNetworkManager : INetworkManager
     public int GetLocalPlayer()
     {
         return myPlayerId;
+    }
+
+    public void UpdateLocalState(ClientState state)
+    {
+        remotePeers[myPlayerId].State = state;
+        // Notify other clients of the state change
+        var changePacket = NetworkPacket.Serialize(new StateChangePacket() {
+            PlayerId = myPlayerId,
+            NewClientState = state,
+            PkgType = PacketType.StateChange,
+        });
+        host.Broadcast(0, ref changePacket);
     }
 }

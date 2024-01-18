@@ -198,10 +198,11 @@ public class GameScene : Scene
         Raylib.DrawText($"Current simulation step: {sim.currentTurn}", 10, 40, 24, Color.BLACK);
         Raylib.DrawText($"Ms per simulation step: {sim.turnSpeedMs}", 10, 70, 24, Color.BLACK);
 
-        var clients = networkManager.GetConnectedClients();
-        if (clients.Any())
-        {
-            Raylib.DrawText($"Remote clients: " + clients.Order().Aggregate("", (a, c) => a + c + ","), 10, 100, 24, Color.BLACK);
+        Raylib.DrawText($"Local player: {networkManager.GetLocalPlayer()}", 800, 100, 24, Color.BLACK);
+        var clients = networkManager.GetClients();
+        foreach(var client in clients) {
+            var height = 100 + client.PlayerId * 30;
+            Raylib.DrawText($"Client {client.PlayerName} ({client.PlayerId}): State: {client.State} Turn done? {client.CurrentTurnDone}", 10, height, 24, Color.BLACK);
         }
 
         Raylib.EndDrawing();
@@ -215,5 +216,10 @@ public class GameScene : Scene
             1 => Color.BLUE,
             _ => throw new ArgumentException("Color not defined for player " + playerId),
         };
+    }
+
+    public ClientState GetState()
+    {
+        return ClientState.InGame;
     }
 }

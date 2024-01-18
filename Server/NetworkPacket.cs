@@ -10,6 +10,7 @@ public enum PacketType
     ServerGreeting,
     Hello,
     Command,
+    StateChange,
 }
 
 // TODO: Can we ensure that 'PkgType' is always correctly filled on serialization?
@@ -31,6 +32,7 @@ public class NetworkPacket
 
     public static Packet Serialize<T>(T networkPacket) where T : NetworkPacket
     {
+        // FIXME: Ensure that correct PkgType is set at all times!
         var json = JsonSerializer.Serialize(networkPacket, options);
         var bytes = Encoding.UTF8.GetBytes(json);
         var packet = default(Packet);
@@ -109,7 +111,6 @@ public class StateChangePacket : NetworkPacket
 {
     public int PlayerId { get; set; }
     public ClientState NewClientState { get; set; }
-
 }
 
 public class StartGamePacket

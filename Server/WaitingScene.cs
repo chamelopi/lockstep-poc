@@ -15,9 +15,14 @@ public class WaitingScene : Scene
         this.camera = camera;
     }
 
+    public ClientState GetState()
+    {
+        return ClientState.Waiting;
+    }
+
     public Scene? Run()
     {
-        while(networkManager.GetConnectedClients().Count() != sim.playerCount) {
+        while(networkManager.GetPlayerIds().Count() != sim.playerCount) {
             if (Raylib.WindowShouldClose()) {
                 return null;
             }
@@ -26,7 +31,15 @@ public class WaitingScene : Scene
 
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Color.LIGHTGRAY);
-            Raylib.DrawText($"Waiting for players, {networkManager.GetConnectedClients().Count()}/{sim.playerCount}", 20, 20, 28, Color.BLACK);
+            Raylib.DrawText($"Waiting for players, {networkManager.GetPlayerIds().Count()}/{sim.playerCount}", 20, 20, 28, Color.BLACK);
+
+            // TODO: Duplicate from GameScene
+            Raylib.DrawText($"Local player: {networkManager.GetLocalPlayer()}", 800, 100, 24, Color.BLACK);
+            var clients = networkManager.GetClients();
+            foreach(var client in clients) {
+                var height = 100 + client.PlayerId * 30;
+                Raylib.DrawText($"Client {client.PlayerName} ({client.PlayerId}): State: {client.State} Turn done? {client.CurrentTurnDone}", 10, height, 24, Color.BLACK);
+            }
             Raylib.EndDrawing();
         }
 
