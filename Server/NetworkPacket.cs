@@ -17,7 +17,6 @@ public enum PacketType
 
 }
 
-// TODO: Can we ensure that 'PkgType' is always correctly filled on serialization?
 public class NetworkPacket
 {
     public static JsonSerializerOptions options = new()

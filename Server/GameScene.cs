@@ -210,19 +210,16 @@ public class GameScene : Scene
             return;
         }
 
-        // TODO: Refactor into clock?
-        long timeSinceLastStep = 0;
-
         // Fixed time step
         var startFrame = Clock.GetTicks();
-        timeSinceLastStep += startFrame - sim.lastTurnTimestamp;
+        var timeSinceLastStep = startFrame - sim.lastTurnTimestamp;
 
         if (timeSinceLastStep > sim.turnSpeedMs)
         {
             // Signal next turn to other players and advance once we are allowed
             networkManager.SignalNextTurn(sim.currentTurn);
             if (networkManager.CanAdvanceTurn()) {
-                sim.lastTurnTimestamp += sim.turnSpeedMs;
+                sim.lastTurnTimestamp = Clock.GetTicks();
 
                 sim.Step();
 

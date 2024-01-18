@@ -16,9 +16,10 @@ see https://docs.unity3d.com/Manual/UsingDLL.html
 #### How to handle entities spawing and despawning? Find a deterministic algorithm for assigning IDs maybe (we can first test this with a purely local simulation)
 - Spawning could be a command in some cases, in other cases it will be automatically during simulation. We have to support both. The order spawning objects of this will have to be deterministic, too.
 - De-spawning will occur on death, destruction, resource harvesting, etc. This might be tricky to get right
+- We need to interpolate between frames which might have different entity counts!
 
 #### Every turn
-- TODO: Do like the AoE paper says :D
+- Do like the AoE paper says :D
 - Collect inputs and broadcast them to the other player's sims (INPUT/COMMAND)
 - Sync turn increments (NEXT TURN)
 - Pause game if a player drops/misses a NEXT TURN, but close connection the game after a timeout (saving all commands to a replay to allow loading)
