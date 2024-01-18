@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ENet;
+using Simulation;
 
 namespace Server;
 
@@ -34,7 +35,8 @@ public class NetworkPacket
     public static Packet Serialize<T>(T networkPacket) where T : NetworkPacket
     {
         // TODO: Autodetect type from class?
-        if (networkPacket.PkgType == 0) {
+        if (networkPacket.PkgType == 0)
+        {
             throw new ArgumentException("PkgType must be set!");
         }
         var json = JsonSerializer.Serialize(networkPacket, options);
@@ -132,9 +134,10 @@ public class StartGamePacket : NetworkPacket
  *
  * This may be movement commands, building placement, unit creation, etc.
  */
-public class CommandPacket
+public class CommandPacket : NetworkPacket
 {
-    // TODO: Implement
+    public int PlayerId { get; set; }
+    public Command Command { get; set; }
 }
 
 /**
@@ -143,6 +146,8 @@ public class CommandPacket
  */
 public class EndOfTurnPacket
 {
-    // TODO: Implement
+    public int PlayerId { get; set; }
+    // The turn this player just ended (i.e. sim.currentTurn *before* incrementing)
+    public int CurrentTurn { get; set; }
 }
 

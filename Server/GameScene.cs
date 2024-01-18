@@ -12,17 +12,23 @@ public class GameScene : Scene
 
     private Simulation.Simulation sim;
     private INetworkManager networkManager;
-    private Camera3D camera;    
+    private Camera3D camera;
+    private int myPlayerId;
 
     public GameScene(Simulation.Simulation sim, INetworkManager networkManager, Camera3D camera)
     {
         this.sim = sim;
         this.networkManager = networkManager;
+        myPlayerId = networkManager.GetLocalPlayer();
         this.camera = camera;
+        var startTime = DateTime.Now;
+        Console.WriteLine($"GAME START at {startTime.ToLongTimeString()}.{startTime.Millisecond}");
     }
 
     public Scene? Run()
     {
+        networkManager.AddCallback(PacketType.Command, HandleRemoteCommand);
+
         while (!Raylib.WindowShouldClose())
         {
             sim.RunSimulation();
@@ -33,6 +39,8 @@ public class GameScene : Scene
             RenderGameState();
         }
 
+        networkManager.RemoveCallback(PacketType.Command);
+        // next scene is null -> exit game
         return null;
     }
 
@@ -79,6 +87,23 @@ public class GameScene : Scene
         }
     }
 
+    void HandleRemoteCommand(NetworkPacket packet)
+    {
+        var commandPacket = (CommandPacket)packet;
+        Console.WriteLine($"Remote command received! {commandPacket.Command}");
+
+        if (commandPacket.Command.TargetTurn < sim.currentTurn) {
+            Console.WriteLine($"ERROR: Received command for past turn: {commandPacket.Command.TargetTurn}. Discarding it.");
+            return;
+        }
+
+        if (commandPacket.PlayerId != commandPacket.PlayerId) {
+            Console.WriteLine($"ERROR: Received command for {commandPacket.PlayerId} from player {commandPacket.PlayerId}!");
+            return;
+        }
+        sim.AddCommand(commandPacket.Command);
+    }
+
     private void RecordSelectCommand()
     {
         // Find point on ground
@@ -110,7 +135,7 @@ public class GameScene : Scene
                         // This allows the netcode time to transmit commands between players
                         TargetTurn = sim.currentTurn + 2,
                     };
-                    sim.AddCommand(cmd);
+                    AddCommand(cmd);
                     hit = true;
 
                     Console.WriteLine($"New command: selected entity {i}");
@@ -129,11 +154,20 @@ public class GameScene : Scene
                     // This allows the netcode time to transmit commands between players
                     TargetTurn = sim.currentTurn + 2,
                 };
-                sim.AddCommand(cmd);
+                AddCommand(cmd);
 
                 Console.WriteLine($"New command: deselected everything");
             }
         }
+    }
+
+    /**
+     * Recods a command, both for the local simulation as well as the network manager.
+     */
+    private void AddCommand(Command command)
+    {
+        sim.AddCommand(command);
+        networkManager.QueuePacket(new CommandPacket() { PkgType = PacketType.Command, PlayerId = myPlayerId, Command = command });
     }
 
     private static RayCollision CollideGround(Camera3D cam)
@@ -162,7 +196,7 @@ public class GameScene : Scene
                 // This allows the netcode time to transmit commands between players
                 TargetTurn = sim.currentTurn + 2,
             };
-            sim.AddCommand(cmd);
+            AddCommand(cmd);
             Console.WriteLine($"New command: move to {cmd.TargetX}/{cmd.TargetY}");
         }
     }
@@ -200,7 +234,8 @@ public class GameScene : Scene
 
         Raylib.DrawText($"Local player: {networkManager.GetLocalPlayer()}", 800, 100, 24, Color.BLACK);
         var clients = networkManager.GetClients();
-        foreach(var client in clients) {
+        foreach (var client in clients)
+        {
             var height = 100 + client.PlayerId * 30;
             Raylib.DrawText($"Client {client.PlayerName} ({client.PlayerId}): State: {client.State} Turn done? {client.CurrentTurnDone}", 10, height, 24, Color.BLACK);
         }

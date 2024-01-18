@@ -301,6 +301,9 @@ public class ENetNetworkManager : INetworkManager
                     {
                         CallHandler(type, NetworkPacket.Deserialize<StartGamePacket>(netEvent.Packet));
                     }
+                    else if (type == PacketType.Command) {
+                        CallHandler(type, NetworkPacket.Deserialize<CommandPacket>(netEvent.Packet));
+                    }
                     netEvent.Packet.Dispose();
                     break;
                 default:
@@ -369,10 +372,12 @@ public class ENetNetworkManager : INetworkManager
         host.Flush();
     }
 
+    
     public void QueuePacket<T>(T packet) where T : NetworkPacket
     {
         var serialized = NetworkPacket.Serialize(packet);
         host.Broadcast(0, ref serialized);
+        // TODO: It might not be optimal for all situations to always flush packets immediately
         host.Flush();
     }
 
