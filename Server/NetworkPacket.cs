@@ -144,7 +144,7 @@ public class CommandPacket : NetworkPacket
  * Tells other players that this player finished sending inputs for their turn. Once every player
  * finished the turn, all players are allowed to advance their simulation by one step.
  */
-public class EndOfTurnPacket
+public class EndOfTurnPacket : NetworkPacket
 {
     public int PlayerId { get; set; }
     // The turn this player just ended (i.e. sim.currentTurn *before* incrementing)

@@ -69,4 +69,10 @@ public class NoopNetworkManager : INetworkManager
     {
         return myClient;
     }
+
+    public bool CanAdvanceTurn()
+    {
+        // In local simulation, we don't have to wait for anyone, so we can always advance the simulation.
+        return true;
+    }
 }

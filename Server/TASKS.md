@@ -14,7 +14,8 @@
 10. Implement checksum calculation for Simulation State
 11. proper logging: `dotnet add package Microsoft.Extensions.Logging`
     - https://learn.microsoft.com/en-us/dotnet/core/extensions/logging?tabs=command-line
-12. send our own state as heartbeat every few seconds
-13. react to disconnects & timeouts
-14. test more than 2 players
-15. stress test with many entities
+12. Implement CRC checking for the game state
+13. send our own state as heartbeat every few seconds
+14. react to disconnects & timeouts
+15. test more than 2 players
+16. stress test with many entities

@@ -36,7 +36,7 @@ public class ENetNetworkManager : INetworkManager
         nm.remotePeers.Add(1, new Client
         {
             CurrentTurnDone = false,
-            // TODO: Do we have our own peer id?
+            // We don't have our own peer ID
             PeerId = 0,
             PlayerId = 1,
             PlayerName = "Player 1",
@@ -59,8 +59,6 @@ public class ENetNetworkManager : INetworkManager
         return nm;
     }
 
-    // TODO: What to return? Is network manager responsible for command serialization?
-    // should this return a IEnumerable<Command>?
     public void PollEvents()
     {
         Event netEvent;
@@ -210,7 +208,8 @@ public class ENetNetworkManager : INetworkManager
                     {
                         CallHandler(type, NetworkPacket.Deserialize<StartGamePacket>(netEvent.Packet));
                     }
-                    else if (type == PacketType.Command) {
+                    else if (type == PacketType.Command)
+                    {
                         CallHandler(type, NetworkPacket.Deserialize<CommandPacket>(netEvent.Packet));
                     }
                     netEvent.Packet.Dispose();
@@ -281,7 +280,7 @@ public class ENetNetworkManager : INetworkManager
         host.Flush();
     }
 
-    
+
     public void QueuePacket<T>(T packet) where T : NetworkPacket
     {
         var serialized = NetworkPacket.Serialize(packet);
@@ -293,5 +292,25 @@ public class ENetNetworkManager : INetworkManager
     public Client GetLocalClient()
     {
         return remotePeers[myPlayerId];
+    }
+
+    public bool CanAdvanceTurn()
+    {
+        var allDone = true;
+        foreach (var peer in remotePeers)
+        {
+            allDone = allDone && peer.Value.CurrentTurnDone;
+        }
+
+        if (!allDone)
+        {
+            return false;
+        }
+
+        foreach (var peer in remotePeers)
+        {
+            peer.Value.CurrentTurnDone = false;
+        }
+        return true;
     }
 }
