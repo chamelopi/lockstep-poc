@@ -1,10 +1,8 @@
 # Tasks
 
-6. Implement dummy logic for map loading (stubs only)
-   - Do an arbitrary, short wait & then change own state to ready (later this will be replaced with map gen/loading)
-   - Have server send out `StartGame` packet once everyone is ready
-   - Only transition state if the `StartGame` packet is received
 7. Transfer commands over network
+7. Fix rare bug where Ready packet arrives before Hello packet -> KeyNotFoundException
+7. Fix bug where start game trigger gets swallowed if players load too fast
 8. Split EntityID and PlayerID
    - i.e. allow multiple Entities per Player
    - assign entity IDs in a deterministic fashion (e.g. each player could use multiples of their player ID)

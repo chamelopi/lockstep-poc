@@ -68,6 +68,8 @@ class Server
             }
         } while(currentScene != null);
 
+        // TODO: Cleanly disconnect from server
+
         Raylib.CloseWindow();
         networkManager.Dispose();
     }

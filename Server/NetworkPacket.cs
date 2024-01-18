@@ -11,6 +11,7 @@ public enum PacketType
     Hello,
     Command,
     StateChange,
+    StartGame,
 }
 
 // TODO: Can we ensure that 'PkgType' is always correctly filled on serialization?
@@ -110,16 +111,20 @@ public class HelloPacket : NetworkPacket
     public bool CurrentTurnDone { get; set; }
 }
 
+/**
+ * Notifies all network peers of a local state change
+ */
 public class StateChangePacket : NetworkPacket
 {
     public int PlayerId { get; set; }
     public ClientState NewClientState { get; set; }
 }
 
-public class StartGamePacket
+/**
+ * Triggers the start of the game. No additional data required.
+ */
+public class StartGamePacket : NetworkPacket
 {
-    // TODO: Implement
-
 }
 
 /**
