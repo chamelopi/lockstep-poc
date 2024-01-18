@@ -19,6 +19,8 @@ namespace Simulation;
             {
                 X = Lerp(a.X, b.X, alpha),
                 Y = Lerp(a.Y, b.Y, alpha),
+                TargetX = Lerp(a.TargetX, b.TargetX, alpha),
+                TargetY = Lerp(a.TargetY, b.TargetY, alpha),
                 VelocityX = Lerp(a.VelocityX, a.VelocityX, alpha),
                 VelocityY = Lerp(a.VelocityY, a.VelocityY, alpha),
                 // Can't interpolate bool, just take last state.

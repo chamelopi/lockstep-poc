@@ -216,8 +216,10 @@ public class ENetNetworkManager : INetworkManager
                     else if (type == PacketType.EndOfTurn)
                     {
                         var endOfTurn = NetworkPacket.Deserialize<EndOfTurnPacket>(netEvent.Packet);
-                        Console.WriteLine($"Player {endOfTurn.PlayerId} is done with their turn {endOfTurn.CurrentTurn}!");
+                        //Console.WriteLine($"Player {endOfTurn.PlayerId} is done with their turn {endOfTurn.CurrentTurn}!");
                         remotePeers[endOfTurn.PlayerId].CurrentTurnDone = true;
+                    } else {
+                        Console.WriteLine("Unknown Packet received from " + netEvent.Peer.ID + " - Channel ID: " + netEvent.ChannelID + ", Data length: " + netEvent.Packet.Length);
                     }
                     netEvent.Packet.Dispose();
                     break;
@@ -337,7 +339,7 @@ public class ENetNetworkManager : INetworkManager
             
             host.Broadcast(0, ref pack);
             lastTurnSignaled = currentTurn;
-            Console.WriteLine($"Player {myPlayerId} is done with Turn {currentTurn}");
+            //Console.WriteLine($"Player {myPlayerId} is done with Turn {currentTurn}");
         }
     }
 }

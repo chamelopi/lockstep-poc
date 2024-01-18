@@ -119,6 +119,8 @@ public class Simulation
 
     public SimulationState Interpolate(float msSinceStartOfTurn)
     {
+        // FIXME: Interpolation issue with networked commands
+
         // 1 if on current turn, 0 if last turn
         float alpha = msSinceStartOfTurn / (float)turnSpeedMs;
 
