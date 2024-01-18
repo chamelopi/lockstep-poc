@@ -12,6 +12,7 @@ public class NetworkPacketTests
     {
         var pack = new ServerGreetingPacket
         {
+            PkgType = PacketType.ServerGreeting,
             AssignedPlayerId = 12,
         };
         var serialized = NetworkPacket.Serialize(pack);
@@ -53,6 +54,17 @@ public class NetworkPacketTests
         var type = NetworkPacket.DetectType(packet);
 
         Assert.That(type, Is.EqualTo(PacketType.Command));
+    }
+
+    [Test]
+    public void TestPacketWithDefaultType() {
+        var pack = new StateChangePacket() {
+            NewClientState = ClientState.Disconnected,
+            PlayerId = 13,
+        };
+
+        // Should not serialize when type is unset
+        Assert.Catch(() => NetworkPacket.Serialize(pack));
     }
 
     [Test]

@@ -7,7 +7,7 @@ namespace Server;
 
 public enum PacketType
 {
-    ServerGreeting,
+    ServerGreeting = 1,
     Hello,
     Command,
     StateChange,
@@ -32,7 +32,10 @@ public class NetworkPacket
 
     public static Packet Serialize<T>(T networkPacket) where T : NetworkPacket
     {
-        // FIXME: Ensure that correct PkgType is set at all times!
+        // TODO: Autodetect type from class?
+        if (networkPacket.PkgType == 0) {
+            throw new ArgumentException("PkgType must be set!");
+        }
         var json = JsonSerializer.Serialize(networkPacket, options);
         var bytes = Encoding.UTF8.GetBytes(json);
         var packet = default(Packet);
