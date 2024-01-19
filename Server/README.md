@@ -4,7 +4,7 @@ Proof of Concept for a lockstep simulation using ENet and C#.
 
 ## Feature list
 
-Currently done are
+The following features are currently done:
 - Command recording & execution for (de-)selecting units and basic move commands
 - Very basic fixed-point math (emulated using `long`) to prevent floating point indeterminism
 - Loading, saving and playing back replays
@@ -41,7 +41,7 @@ Currently done are
 - `Simulation` Average time to calculate a simulation step
 - `Simulation` Checksums of simulation state
 
-## Unity - How to use a managed plugin
+## Unity - How to use this as a managed plugin
 
 see https://docs.unity3d.com/Manual/UsingDLL.html
 

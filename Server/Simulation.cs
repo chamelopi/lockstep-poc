@@ -142,6 +142,7 @@ public class Simulation
         // Run the simulation again, with the same inputs. It should yield exactly the same results.
         var determinismCheck = new Simulation(this.turnSpeedMs, this.playerCount);
         determinismCheck.AddCommands(this.allCommands);
+        // FIXME: Replicate initial (!) entity state
 
         // Step until we reach the other simulations turn
         while (determinismCheck.currentTurn < this.currentTurn)

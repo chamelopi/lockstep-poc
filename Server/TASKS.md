@@ -3,21 +3,23 @@
 ## Short-Term bugfixes
 1. Refactor NetworkPacket deserialization to auto-detect type & choose appropriate class
 
-## More features
-4. Split EntityID and PlayerID
+## Simulation features
+2. Split EntityID and PlayerID
    - allow player to spawn entities (debug function)
    - allow player to kill entities (debug function)
-5. Implement box select command
-6. Implement checksum calculation for Simulation State (e.g. CRC)
+3. Implement box select command
+4. Implement checksum calculation for Simulation State (e.g. CRC)
+5. Implement map (just a list of entities, loaded on startup)
+6. Store initial state of simulation in replay
+   - Fix CheckFullDeterminism by replicating this initial state as basis for the re-simulation
 
-## Even more features
-7. send our own state as heartbeat every few seconds
-    - this might also fix the above bugs
+## Networking features
+7. send our own state as heartbeat every few seconds?
 8. react to disconnects & timeouts
 
 ## Production-ready features
 9. test more than 2 players
-10. stress test with many entities
+10. stress test with thousands of entities
 11. collect statistics (see readme)
 12. proper logging: `dotnet add package Microsoft.Extensions.Logging`
     - https://learn.microsoft.com/en-us/dotnet/core/extensions/logging?tabs=command-line

@@ -39,7 +39,6 @@ public class SimulationState
 
     public Entity SpawnEntity(Entity entity, int playerId) {
         var id = GetNextId(playerId);
-        Console.WriteLine($"New entity for Player {playerId} gets id {id}");
         entity.EntityId = id;
         entity.OwningPlayer = playerId;
         this.Entities.Add(id, entity);
