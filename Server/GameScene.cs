@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Numerics;
 using Raylib_cs;
 using Simulation;
@@ -114,23 +115,20 @@ public class GameScene : Scene
         {
             // Check for entities in the close proximity
             bool hit = false;
-            for (int i = 0; i < sim.currentState.Entities.Count; i++)
+            foreach(var entity in sim.currentState.Entities.Values)
             {
                 // Guard against selecting other player's entities.
-                // TODO: Replace this with ownership check once we have more than once entity per player
-                if ((i + 1) != networkManager.GetLocalPlayer())
+                if (entity.OwningPlayer != networkManager.GetLocalPlayer())
                 {
                     continue;
                 }
 
-                var entity = sim.currentState.Entities[i];
-
                 var dist = Distance(entity.X, entity.Y, coll.Point.X, coll.Point.Z);
                 if (dist < FixedPointUtil.One * 2)
                 {
-                    var cmd = new Simulation.Command
+                    var cmd = new Command
                     {
-                        // TODO: We will have to add an entity id later!
+                        EntityId = entity.EntityId,
                         PlayerId = networkManager.GetLocalPlayer(),
                         CommandType = CommandType.Select,
                         // Queue up commands for two turns in the future!
@@ -140,7 +138,8 @@ public class GameScene : Scene
                     AddCommand(cmd);
                     hit = true;
 
-                    Console.WriteLine($"New command: selected entity {i}");
+                    Console.WriteLine($"New command: selected entity {entity.EntityId}");
+                    // Select only one entity this way
                     break;
                 }
             }
@@ -148,7 +147,7 @@ public class GameScene : Scene
             // If we hit nothing, deselect
             if (!hit)
             {
-                var cmd = new Simulation.Command
+                var cmd = new Command
                 {
                     PlayerId = networkManager.GetLocalPlayer(),
                     CommandType = CommandType.Deselect,
@@ -242,13 +241,13 @@ public class GameScene : Scene
         // TODO: This is not smooth, we should maybe store the delta when pausing?
         var interpolatedState = sim.isPaused ? sim.currentState : sim.Interpolate(delta);
         int i = 0;
-        foreach (var obj in interpolatedState.Entities)
+        foreach (var (entityId, obj) in interpolatedState.Entities)
         {
             var pos = new Vector3(FromFixed(obj.X), 0, FromFixed(obj.Y));
-            Raylib.DrawCube(pos, 1, 1, 1, GetColor(i));
-            if (interpolatedState.SelectedEntities.Contains(i))
+            Raylib.DrawCube(pos, 1, 1, 1, GetColor(obj.OwningPlayer));
+            if (interpolatedState.SelectedEntities.Contains(entityId))
             {
-                Raylib.DrawCircle3D(pos, 1.5f, new Vector3(1, 0, 0), 90f, GetColor(i));
+                Raylib.DrawCircle3D(pos, 1.5f, new Vector3(1, 0, 0), 90f, GetColor(obj.OwningPlayer));
             }
             i++;
         }
@@ -275,8 +274,9 @@ public class GameScene : Scene
     {
         return playerId switch
         {
-            0 => Color.RED,
-            1 => Color.BLUE,
+            0 => Color.GRAY,
+            1 => Color.RED,
+            2 => Color.BLUE,
             _ => throw new ArgumentException("Color not defined for player " + playerId),
         };
     }

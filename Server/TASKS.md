@@ -5,8 +5,6 @@
 
 ## More features
 4. Split EntityID and PlayerID
-   - i.e. allow multiple Entities per Player
-   - assign entity IDs in a deterministic fashion (e.g. each player could use multiples of their player ID)
    - allow player to spawn entities (debug function)
    - allow player to kill entities (debug function)
 5. Implement box select command

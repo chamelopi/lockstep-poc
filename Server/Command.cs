@@ -14,6 +14,7 @@ public enum CommandType
 public struct Command
 {
     public int PlayerId;
+    public int EntityId;
     public int TargetTurn;
     public CommandType CommandType;
 
@@ -25,7 +26,7 @@ public struct Command
 
     public override string ToString()
     {
-        return $"Command: id={PlayerId}, turn={TargetTurn}, type={CommandType}, tx={TargetX}, ty={TargetY}, boxX={BoxX}, boxY={BoxY}";
+        return $"Command: id={PlayerId}, turn={TargetTurn}, type={CommandType}, tx={TargetX}, ty={TargetY}, boxX={BoxX}, boxY={BoxY}, entityId={EntityId}";
     }
 
     public string Serialize()

@@ -35,10 +35,6 @@ public class Simulation
         this.currentTurn = 0;
 
         this.lastState = new(playerCount);
-        for (int i = 0; i < playerCount; i++)
-        {
-            this.lastState.Entities.Add(new Entity { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
-        }
         this.currentState = new(this.lastState);
         this.twoStepsAgoState = new(this.lastState);
         this.commandQueue = new();
@@ -51,10 +47,6 @@ public class Simulation
     {
         this.currentTurn = 0;
         this.currentState = new(playerCount);
-        for (int i = 0; i < playerCount; i++)
-        {
-            this.currentState.Entities.Add(new Entity { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
-        }
         this.lastState = new(currentState);
         this.twoStepsAgoState = new(currentState);
 
@@ -98,10 +90,9 @@ public class Simulation
         }
 
         // Update state
-        for (int i = 0; i < this.currentState.Entities.Count; i++)
+        foreach (var (id, entity) in this.currentState.Entities)
         {
-            var player = this.currentState.Entities[i];
-            this.currentState.Entities[i] = player.Update();
+            this.currentState.Entities[id] = entity.Update();
         }
     }
 
@@ -120,7 +111,8 @@ public class Simulation
     {
         // 1 if on current turn, 0 if last turn
         float alpha = msSinceStartOfTurn / (float)turnSpeedMs;
-        if (alpha > 1.0 || alpha < 0.0) {
+        if (alpha > 1.0 || alpha < 0.0)
+        {
             //Console.WriteLine($"alpha is {alpha} for interpolation - that seems wrong! :D");
         }
         // To prevent teleporting - if we do have to clamp alpha here, the game will stutter however.
@@ -133,9 +125,9 @@ public class Simulation
         //    b) an entity was despawned in one of these frames?
         //    do we give them a spawn turn index and let the rendering code handle that somehow?
 
-        for (int i = 0; i < interpolatedState.Entities.Count; i++)
+        foreach (var entityId in interpolatedState.Entities.Keys)
         {
-            interpolatedState.Entities[i] = Entity.Interpolate(lastState.Entities[i], twoStepsAgoState.Entities[i], alpha);
+            interpolatedState.Entities[entityId] = Entity.Interpolate(lastState.Entities[entityId], twoStepsAgoState.Entities[entityId], alpha);
         }
 
         return interpolatedState;
@@ -199,19 +191,25 @@ public class Simulation
             throw new SimulationNotDeterministicException($"Number of entities in state differs: Real sim - {stateA.Entities.Count} | Check sim - {stateB.Entities.Count}");
         }
 
-        // Check if objects are equal
-        for (int i = 0; i < stateA.Entities.Count; i++)
+        if (!stateA.Entities.Keys.ToHashSet().SetEquals(stateB.Entities.Keys))
         {
-            var objA = stateA.Entities[i];
-            var objB = stateB.Entities[i];
+            Console.WriteLine("A: " + string.Join(", ", stateA.Entities.Keys.ToArray()));
+            Console.WriteLine("B: " + string.Join(", ", stateB.Entities.Keys.ToArray()));
+            throw new SimulationNotDeterministicException($"Different entity IDs in both states!");
+        }
+
+        // Check if objects are equal
+        foreach (var entityId in stateA.Entities.Keys)
+        {
+            var objA = stateA.Entities[entityId];
+            var objB = stateB.Entities[entityId];
 
             if (objA != objB)
             {
-                throw new SimulationNotDeterministicException($"Entity {i} does not match in both simulations! Real sim - {objA} | Check sim - {objB}");
+                throw new SimulationNotDeterministicException($"Entity {entityId} does not match in both simulations! Real sim - {objA} | Check sim - {objB}");
             }
         }
     }
-
 
 
     public float GetTimeSinceLastStep()
@@ -223,7 +221,7 @@ public class Simulation
     {
         using (var stream = new StreamWriter(filename))
         {
-            var serialized = JsonSerializer.Serialize(allCommands, NetworkPacket.options);
+            var serialized = JsonSerializer.Serialize(new Replay() { Commands = allCommands }, NetworkPacket.options);
             stream.Write(serialized);
         }
 
@@ -232,18 +230,20 @@ public class Simulation
 
     public void LoadReplay(string filename)
     {
-        var commands = new List<Command>();
+        Replay replay;
         using (var stream = new StreamReader(filename))
         {
-            commands = JsonSerializer.Deserialize<List<Command>>(stream.BaseStream, NetworkPacket.options);
+            replay = JsonSerializer.Deserialize<Replay>(stream.BaseStream, NetworkPacket.options);
         }
-        if (commands == null)
+        if (replay == null)
         {
             throw new ArgumentException("Could not parse replay " + filename + " - result was null!");
         }
 
-        this.Reset();
-        this.AddCommands(commands);
+        // Commented for now to allow replays to use the entities already on the map.
+        // FIXME: Store initial entities in replay and restore them here!
+        //this.Reset();
+        this.AddCommands(replay.Commands);
         for (int i = 0; i < commandQueue.Count; i++)
         {
             Console.WriteLine(commandQueue.UnorderedItems.ElementAt(i).ToString());

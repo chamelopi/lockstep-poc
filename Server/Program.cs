@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using Raylib_cs;
 using System.CommandLine;
+using Simulation;
 
 namespace Server;
 
@@ -31,10 +32,13 @@ class Server
     {
         // Init rendering
         Raylib.InitWindow(1280, 1024, "Simulation");
+        Raylib.SetTargetFPS(144);
         var camera = new Camera3D(new Vector3(50.0f, 50.0f, 50.0f), Vector3.Zero, Vector3.UnitY, 45, CameraProjection.CAMERA_PERSPECTIVE);
 
         INetworkManager networkManager;
         var sim = new Simulation.Simulation(InitialTurnSpeedMs, PlayerCount);
+
+        InitSim(sim);
 
         // Argument parsing
         if (replay != null)
@@ -61,17 +65,33 @@ class Server
         Scene? currentScene = networkManager.GetType() == typeof(NoopNetworkManager)
             ? new GameScene(sim, networkManager, camera)
             : new WaitingScene(sim, networkManager, camera);
-        do {
+        do
+        {
             currentScene = currentScene.Run();
-            if (currentScene != null) {
+            if (currentScene != null)
+            {
                 networkManager.UpdateLocalState(currentScene.GetState());
             }
-        } while(currentScene != null);
+        } while (currentScene != null);
 
         // TODO: Cleanly disconnect from server
 
         Raylib.CloseWindow();
         networkManager.Dispose();
+    }
+
+    // TODO: Load initial state from a map file / generate it
+    private static void InitSim(Simulation.Simulation sim)
+    {
+        // Initialize some entities
+        for (int i = 1; i <= sim.playerCount; i++)
+        {
+            sim.lastState.SpawnEntity(new Entity { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false }, i);
+            sim.lastState.SpawnEntity(new Entity { X = 10000 * i, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false }, i);
+            sim.lastState.SpawnEntity(new Entity { X = 10000 * 2 * i, Y = 10000, VelocityX = 0, VelocityY = 0, Moving = false }, i);
+        }
+        sim.currentState = new(sim.lastState);
+        sim.twoStepsAgoState = new(sim.lastState);
     }
 }
 

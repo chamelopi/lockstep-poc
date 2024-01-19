@@ -11,6 +11,7 @@ public struct Entity
     public long VelocityY;
     public bool Moving;
     public int OwningPlayer;
+    public int EntityId;
 
 
     public static Entity Interpolate(Entity a, Entity b, float alpha)
@@ -43,7 +44,7 @@ public struct Entity
             {
                 this.X = TargetX;
                 this.Y = TargetY;
-                Moving = false;
+                this.Moving = false;
                 return this;
             }
 

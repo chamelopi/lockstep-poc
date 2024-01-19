@@ -1,3 +1,5 @@
+using UnityEngine.Experimental.GlobalIllumination;
+
 namespace Simulation;
 
 public class CommandHandler
@@ -28,7 +30,7 @@ public class CommandHandler
     private static void HandleSelectCommand(SimulationState currentState, Command command)
     {
         currentState.SelectedEntities.Clear();
-        currentState.SelectedEntities.Add(command.PlayerId - 1);
+        currentState.SelectedEntities.Add(command.EntityId);
     }
 
     private static void HandleDeselectCommand(SimulationState currentState)
@@ -40,26 +42,21 @@ public class CommandHandler
     {
         foreach (var selected in currentState.SelectedEntities)
         {
-            var affectedPlayer = currentState.Entities[selected];
+            var affectedEntity = currentState.Entities[selected];
 
-            var dx = command.TargetX - affectedPlayer.X;
-            var dy = command.TargetY - affectedPlayer.Y;
+            var dx = command.TargetX - affectedEntity.X;
+            var dy = command.TargetY - affectedEntity.Y;
             var dist = (long)Math.Sqrt(dx * dx + dy * dy);
             var vx = dx * PlayerSpeed / dist;
             var vy = dy * PlayerSpeed / dist;
 
-            var updatedPlayer = new Entity
-            {
-                X = affectedPlayer.X,
-                Y = affectedPlayer.Y,
-                VelocityX = vx,
-                VelocityY = vy,
-                TargetX = command.TargetX,
-                TargetY = command.TargetY,
-                Moving = true,
-            };
+            affectedEntity.TargetX = command.TargetX;
+            affectedEntity.TargetY = command.TargetY;
+            affectedEntity.VelocityX = vx;
+            affectedEntity.VelocityY = vy;
+            affectedEntity.Moving = true;
 
-            currentState.Entities[selected] = updatedPlayer;
+            currentState.Entities[selected] = affectedEntity;
         }
     }
 }
