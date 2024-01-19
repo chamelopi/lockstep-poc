@@ -85,8 +85,14 @@ public class GameScene : Scene
             {
                 RecordSelectCommand();
             }
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_E))
+            {
+                RecordSpawnCommand();
+            }
         }
     }
+
+
 
     void HandleRemoteCommand(NetworkPacket packet)
     {
@@ -115,7 +121,7 @@ public class GameScene : Scene
         {
             // Check for entities in the close proximity
             bool hit = false;
-            foreach(var entity in sim.currentState.Entities.Values)
+            foreach (var entity in sim.currentState.Entities.Values)
             {
                 // Guard against selecting other player's entities.
                 if (entity.OwningPlayer != networkManager.GetLocalPlayer())
@@ -131,9 +137,6 @@ public class GameScene : Scene
                         EntityId = entity.EntityId,
                         PlayerId = networkManager.GetLocalPlayer(),
                         CommandType = CommandType.Select,
-                        // Queue up commands for two turns in the future!
-                        // This allows the netcode time to transmit commands between players
-                        TargetTurn = sim.currentTurn + 2,
                     };
                     AddCommand(cmd);
                     hit = true;
@@ -151,9 +154,6 @@ public class GameScene : Scene
                 {
                     PlayerId = networkManager.GetLocalPlayer(),
                     CommandType = CommandType.Deselect,
-                    // Queue up commands for two turns in the future!
-                    // This allows the netcode time to transmit commands between players
-                    TargetTurn = sim.currentTurn + 2,
                 };
                 AddCommand(cmd);
 
@@ -162,22 +162,24 @@ public class GameScene : Scene
         }
     }
 
-    /**
-     * Recods a command, both for the local simulation as well as the network manager.
-     */
-    private void AddCommand(Command command)
+    
+    private void RecordSpawnCommand()
     {
-        sim.AddCommand(command);
-        networkManager.QueuePacket(new CommandPacket() { PkgType = PacketType.Command, PlayerId = myPlayerId, Command = command });
-    }
+         // Find point on ground
+        var coll = CollideGround(camera);
+        if (coll.Hit)
+        {
+            var spawnCommand = new Command() {
+                CommandType = CommandType.Spawn,
+                // This will later have to track the entity TYPE, too!
+                PlayerId = myPlayerId,
+                TargetX = ToFixed(coll.Point.X),
+                TargetY = ToFixed(coll.Point.Z),
+            };
+            AddCommand(spawnCommand);
 
-    private static RayCollision CollideGround(Camera3D cam)
-    {
-        return Raylib.GetRayCollisionQuad(Raylib.GetMouseRay(Raylib.GetMousePosition(), cam),
-            new Vector3(-GroundSize / 2, -1, -GroundSize / 2),
-            new Vector3(-GroundSize / 2, -1, GroundSize / 2),
-            new Vector3(GroundSize / 2, -1, GroundSize / 2),
-            new Vector3(GroundSize / 2, -1, -GroundSize / 2));
+            Console.WriteLine($"New command: spawn entity");
+        }
     }
 
     private void RecordMoveCommand()
@@ -202,6 +204,30 @@ public class GameScene : Scene
         }
     }
 
+    /**
+     * Records a command, both for the local simulation as well as the network manager.
+     *
+     * Commands are always recorded 2 turns in the future, to compensate for packet travel times.
+     */
+    private void AddCommand(Command command)
+    {
+        // Queue up commands for two turns in the future!
+        // This allows the netcode time to transmit commands between players
+        command.TargetTurn =  sim.currentTurn + 2;
+        
+        sim.AddCommand(command);
+        networkManager.QueuePacket(new CommandPacket() { PkgType = PacketType.Command, PlayerId = myPlayerId, Command = command });
+    }
+
+    private static RayCollision CollideGround(Camera3D cam)
+    {
+        return Raylib.GetRayCollisionQuad(Raylib.GetMouseRay(Raylib.GetMousePosition(), cam),
+            new Vector3(-GroundSize / 2, -1, -GroundSize / 2),
+            new Vector3(-GroundSize / 2, -1, GroundSize / 2),
+            new Vector3(GroundSize / 2, -1, GroundSize / 2),
+            new Vector3(GroundSize / 2, -1, -GroundSize / 2));
+    }
+
     private void RunSimulation()
     {
         if (sim.isPaused)
@@ -217,7 +243,8 @@ public class GameScene : Scene
         {
             // Signal next turn to other players and advance once we are allowed
             networkManager.SignalNextTurn(sim.currentTurn);
-            if (networkManager.CanAdvanceTurn()) {
+            if (networkManager.CanAdvanceTurn())
+            {
                 sim.lastTurnTimestamp = Clock.GetTicks();
 
                 sim.Step();

@@ -1,5 +1,3 @@
-using UnityEngine.Experimental.GlobalIllumination;
-
 namespace Simulation;
 
 public class CommandHandler
@@ -20,6 +18,9 @@ public class CommandHandler
                 break;
             case CommandType.Move:
                 HandleMoveCommand(currentState, command);
+                break;
+            case CommandType.Spawn:
+                HandleSpawnCommand(currentState, command);
                 break;
             default:
                 Console.WriteLine("CommandHandler: Unknown command type " + command.CommandType);
@@ -58,5 +59,16 @@ public class CommandHandler
 
             currentState.Entities[selected] = affectedEntity;
         }
+    }
+
+    private static void HandleSpawnCommand(SimulationState currentState, Command command)
+    {
+        var entity = new Entity() {
+            OwningPlayer = command.PlayerId,
+            X = command.TargetX,
+            Y = command.TargetY,
+            Moving = false,
+        };
+        currentState.SpawnEntity(entity, command.PlayerId);
     }
 }

@@ -120,14 +120,18 @@ public class Simulation
 
         SimulationState interpolatedState = new(lastState);
 
-        // TODO: How do we handle the case where
-        //    a) a new entity has been spawned in or 
-        //    b) an entity was despawned in one of these frames?
-        //    do we give them a spawn turn index and let the rendering code handle that somehow?
-
-        foreach (var entityId in interpolatedState.Entities.Keys)
+        foreach (var (entityId, entity) in interpolatedState.Entities)
         {
-            interpolatedState.Entities[entityId] = Entity.Interpolate(lastState.Entities[entityId], twoStepsAgoState.Entities[entityId], alpha);
+            // Only interpolate if the entity existed during the last turn - otherwise just use the "new" entity!
+            if (!twoStepsAgoState.Entities.ContainsKey(entityId))
+            {
+                interpolatedState.Entities[entityId] = entity;
+            }
+            // TODO: Handle case of entity despawning
+            else
+            {
+                interpolatedState.Entities[entityId] = Entity.Interpolate(entity, twoStepsAgoState.Entities[entityId], alpha);
+            }
         }
 
         return interpolatedState;

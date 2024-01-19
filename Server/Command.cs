@@ -9,6 +9,7 @@ public enum CommandType
     Deselect,
     BoxSelect,
     Move,
+    Spawn,
 }
 
 public struct Command
