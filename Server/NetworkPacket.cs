@@ -43,7 +43,10 @@ public class NetworkPacket
         var json = JsonSerializer.Serialize(networkPacket, options);
         var bytes = Encoding.UTF8.GetBytes(json);
         var packet = default(Packet);
-        packet.Create(bytes);
+        // We always want reliable packets. We don't need the extra speedup of using
+        // unreliable packets because sending just the input over the network does not create
+        // much traffic.
+        packet.Create(bytes, PacketFlags.Reliable);
         return packet;
     }
 
