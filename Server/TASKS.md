@@ -2,10 +2,6 @@
 
 ## Short-Term bugfixes
 1. Refactor NetworkPacket deserialization to auto-detect type & choose appropriate class
-2. Fix rare bug where Ready packet arrives before Hello packet -> KeyNotFoundException
-3. Fix bug where start game trigger gets swallowed if players load too fast
-   - one player does not receive the ready message?
-   - can we fix this with periodic hellos?
 
 ## More features
 4. Split EntityID and PlayerID

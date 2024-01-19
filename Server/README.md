@@ -12,6 +12,7 @@ Currently done are
 - Synchronization of simulation turns to keep the game in sync
 - Single-Player mode without network (only one player is controllable in this mode)
 - Local determinism check between two simulation frames (i.e. the simulation step is calculated twice, and checked against itself)
+- Pausing the simulation
 
 ## Networking notes
 

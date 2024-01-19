@@ -120,8 +120,6 @@ public class ENetNetworkManager : INetworkManager
                     }
                     break;
                 case EventType.Receive:
-                    Console.WriteLine("Packet received from " + netEvent.Peer.ID + " - Channel ID: " + netEvent.ChannelID + ", Data length: " + netEvent.Packet.Length);
-
                     var type = NetworkPacket.DetectType(netEvent.Packet);
                     if (type == PacketType.ServerGreeting)
                     {
@@ -201,6 +199,11 @@ public class ENetNetworkManager : INetworkManager
                     {
                         var stateChange = NetworkPacket.Deserialize<StateChangePacket>(netEvent.Packet);
                         Console.WriteLine($"Received StateChange from {stateChange.PlayerId}: {stateChange.NewClientState}");
+                        if (!remotePeers.ContainsKey(stateChange.PlayerId)) {
+                            // Drop packet because we don't know this player yet. Once they send us a HELLO packet,
+                            // we will know their current state.
+                            break;
+                        }
                         remotePeers[stateChange.PlayerId].State = stateChange.NewClientState;
 
                         CallHandler(type, stateChange);

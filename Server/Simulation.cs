@@ -121,7 +121,7 @@ public class Simulation
         // 1 if on current turn, 0 if last turn
         float alpha = msSinceStartOfTurn / (float)turnSpeedMs;
         if (alpha > 1.0 || alpha < 0.0) {
-            Console.WriteLine($"alpha is {alpha} for interpolation - that seems wrong! :D");
+            //Console.WriteLine($"alpha is {alpha} for interpolation - that seems wrong! :D");
         }
         // To prevent teleporting - if we do have to clamp alpha here, the game will stutter however.
         alpha = Math.Min(1.0f, Math.Max(0.0f, alpha));
