@@ -48,7 +48,7 @@ public class CommandHandler
             var vx = dx * PlayerSpeed / dist;
             var vy = dy * PlayerSpeed / dist;
 
-            var updatedPlayer = new Player
+            var updatedPlayer = new Entity
             {
                 X = affectedPlayer.X,
                 Y = affectedPlayer.Y,

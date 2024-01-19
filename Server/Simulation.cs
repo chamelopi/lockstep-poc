@@ -37,7 +37,7 @@ public class Simulation
         this.lastState = new(playerCount);
         for (int i = 0; i < playerCount; i++)
         {
-            this.lastState.Entities.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
+            this.lastState.Entities.Add(new Entity { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
         }
         this.currentState = new(this.lastState);
         this.twoStepsAgoState = new(this.lastState);
@@ -53,7 +53,7 @@ public class Simulation
         this.currentState = new(playerCount);
         for (int i = 0; i < playerCount; i++)
         {
-            this.currentState.Entities.Add(new Player { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
+            this.currentState.Entities.Add(new Entity { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false });
         }
         this.lastState = new(currentState);
         this.twoStepsAgoState = new(currentState);
@@ -135,7 +135,7 @@ public class Simulation
 
         for (int i = 0; i < interpolatedState.Entities.Count; i++)
         {
-            interpolatedState.Entities[i] = Player.Interpolate(lastState.Entities[i], twoStepsAgoState.Entities[i], alpha);
+            interpolatedState.Entities[i] = Entity.Interpolate(lastState.Entities[i], twoStepsAgoState.Entities[i], alpha);
         }
 
         return interpolatedState;

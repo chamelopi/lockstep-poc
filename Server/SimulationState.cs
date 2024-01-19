@@ -1,7 +1,7 @@
 namespace Simulation;
 public class SimulationState
 {
-    public List<Player> Entities;
+    public List<Entity> Entities;
     public List<int> SelectedEntities;
 
     public SimulationState(int numberOfPlayers)

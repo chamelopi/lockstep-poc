@@ -2,7 +2,7 @@ namespace Simulation;
 
     // long due to floating point determinism stuff - would be fixed point probably
     // Stand-in struct for all game entities.
-    public struct Player
+    public struct Entity
     {
         public long X;
         public long Y;
@@ -13,9 +13,9 @@ namespace Simulation;
         public bool Moving;
 
 
-        public static Player Interpolate(Player a, Player b, float alpha)
+        public static Entity Interpolate(Entity a, Entity b, float alpha)
         {
-            return new Player
+            return new Entity
             {
                 X = Lerp(a.X, b.X, alpha),
                 Y = Lerp(a.Y, b.Y, alpha),
@@ -34,12 +34,12 @@ namespace Simulation;
             return result;
         }
 
-        public Player Update()
+        public Entity Update()
         {
             if (this.Moving)
             {
                 if (FixedPointUtil.Distance(X, Y, TargetX, TargetY) < FixedPointUtil.One * 2) {
-                    return new Player
+                    return new Entity
                     {
                         X = this.TargetX,
                         Y = this.TargetY,
@@ -52,7 +52,7 @@ namespace Simulation;
                     };
                 }
 
-                return new Player
+                return new Entity
                 {
                     X = this.X + this.VelocityX,
                     Y = this.Y + this.VelocityY,
@@ -77,17 +77,17 @@ namespace Simulation;
                 return false;
             }
 
-            var other = (Player)obj;
+            var other = (Entity)obj;
             return X == other.X && Y == other.Y && VelocityX == other.VelocityX && VelocityY == other.VelocityY && Moving == other.Moving
                 && TargetX == other.TargetX && TargetY == other.TargetY;
         }
 
-        public static bool operator ==(Player left, Player right)
+        public static bool operator ==(Entity left, Entity right)
         {
             return left.Equals(right);
         }
 
-        public static bool operator !=(Player left, Player right)
+        public static bool operator !=(Entity left, Entity right)
         {
             return !(left == right);
         }
