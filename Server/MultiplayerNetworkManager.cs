@@ -2,7 +2,8 @@ namespace Server;
 
 using ENet;
 
-public class ENetNetworkManager : INetworkManager
+// TODO: Refactor to be agnostic of the networking library
+public class MultiplayerNetworkManager : INetworkManager
 {
     private Host host;
     private bool isServer;
@@ -13,7 +14,7 @@ public class ENetNetworkManager : INetworkManager
     private int myPlayerId;
     public int lastTurnSignaled = -1;
 
-    private ENetNetworkManager(Host host, bool isServer)
+    private MultiplayerNetworkManager(Host host, bool isServer)
     {
         ENet.Library.Initialize();
         this.host = host;
@@ -23,9 +24,9 @@ public class ENetNetworkManager : INetworkManager
     }
 
 
-    public static ENetNetworkManager NewServer(ushort port, int maxClients = 8)
+    public static MultiplayerNetworkManager NewServer(ushort port, int maxClients = 8)
     {
-        var nm = new ENetNetworkManager(new Host(), true);
+        var nm = new MultiplayerNetworkManager(new Host(), true);
         var address = new Address
         {
             Port = port
@@ -47,9 +48,9 @@ public class ENetNetworkManager : INetworkManager
         return nm;
     }
 
-    public static ENetNetworkManager NewClient(string ip, ushort port)
+    public static MultiplayerNetworkManager NewClient(string ip, ushort port)
     {
-        var nm = new ENetNetworkManager(new Host(), false);
+        var nm = new MultiplayerNetworkManager(new Host(), false);
         var address = new Address
         {
             Port = port,

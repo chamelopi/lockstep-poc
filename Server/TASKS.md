@@ -2,6 +2,7 @@
 
 ## Short-Term bugfixes/improvements
 1. Refactor NetworkPacket deserialization to auto-detect type & choose appropriate class
+2. On pause, send a packet to everyone to let them know about the pause
 
 ## Simulation features
 2. Split EntityID and PlayerID
@@ -28,7 +29,7 @@
 ## Unity
 14. Port to Unity/Integrate into Unity
     - Decide if this should be an engine-agnostic library, or tightly integrated in our HGLG codebase
-        - If Engine agnostic, how do we use a .NET DLL in Unity?
+        - If Engine agnostic, how do we use a .NET Core DLL in Unity? Is that possible?
     - Refactor scenes so that they can be called/ported to MonoBehaviour
     - Use timing based on Unity's delta
     - Refactor ENetNetworkManager to allow us to use another networking library/RPCs instead

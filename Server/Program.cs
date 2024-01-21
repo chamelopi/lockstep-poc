@@ -48,21 +48,21 @@ class Server
         }
         if (server)
         {
-            networkManager = ENetNetworkManager.NewServer(Port);
+            networkManager = MultiplayerNetworkManager.NewServer(Port);
             Console.WriteLine("Started server!");
         }
         else if (host != null)
         {
-            networkManager = ENetNetworkManager.NewClient(host, Port);
+            networkManager = MultiplayerNetworkManager.NewClient(host, Port);
             Console.WriteLine("Started client & connected to " + host);
         }
         else
         {
-            networkManager = new NoopNetworkManager();
+            networkManager = new SingleplayerNetworkManager();
             Console.WriteLine("Started without network!");
         }
 
-        Scene? currentScene = networkManager.GetType() == typeof(NoopNetworkManager)
+        Scene? currentScene = networkManager.GetType() == typeof(SingleplayerNetworkManager)
             ? new GameScene(sim, networkManager, camera)
             : new WaitingScene(sim, networkManager, camera);
         do

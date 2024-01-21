@@ -3,7 +3,7 @@ namespace Server;
 /**
  * Mocks network for single-player or local only simulations
  */
-public class NoopNetworkManager : INetworkManager
+public class SingleplayerNetworkManager : INetworkManager
 {
     private Client myClient = new Client
     {
