@@ -107,9 +107,12 @@ public class GameScene : Scene
 
         if (commandPacket.PlayerId != commandPacket.PlayerId)
         {
-            Console.WriteLine($"ERROR: Received command for {commandPacket.PlayerId} from player {commandPacket.PlayerId}!");
+            Console.WriteLine($"ERROR: Received command for player {commandPacket.PlayerId} from player {commandPacket.PlayerId}!");
             return;
         }
+
+        // It is important here that we add the command to the local simulation, only!
+        // Otherwise it would be sent to all players again, as if it was our own command!
         sim.AddCommand(commandPacket.Command);
     }
 

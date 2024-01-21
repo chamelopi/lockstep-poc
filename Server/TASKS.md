@@ -1,6 +1,6 @@
 # Tasks
 
-## Short-Term bugfixes
+## Short-Term bugfixes/improvements
 1. Refactor NetworkPacket deserialization to auto-detect type & choose appropriate class
 
 ## Simulation features
@@ -26,8 +26,10 @@
 13. Use or implement a fixed point math lib
 
 ## Unity
-14. (FINALLY) port to Unity
+14. Port to Unity/Integrate into Unity
     - Decide if this should be an engine-agnostic library, or tightly integrated in our HGLG codebase
+        - If Engine agnostic, how do we use a .NET DLL in Unity?
     - Refactor scenes so that they can be called/ported to MonoBehaviour
     - Use timing based on Unity's delta
+    - Refactor ENetNetworkManager to allow us to use another networking library/RPCs instead
     - Check if we should use DOTS.Net or keep ENet
