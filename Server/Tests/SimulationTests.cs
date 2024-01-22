@@ -1,5 +1,6 @@
 namespace Tests;
 
+using System.Data.SqlTypes;
 using Simulation;
 
 public class SimulationTests
@@ -26,6 +27,49 @@ public class SimulationTests
         // Maximum update time to get stable 60 FPS, not respecting rendering 
         var maxTimeMs = 16;
         var steps = 100;
+        var sim = CreateBaseSim(numEntities);
+
+        for (int i = 0; i < steps; i++)
+        {
+            var duration = Clock.TimeIt(() =>
+            {
+                sim.Step();
+            });
+            Console.WriteLine($"Simulation stepping {numEntities} took {duration}ms");
+            if (duration > maxTimeMs)
+            {
+                Assert.Fail($"Simulation stepping {numEntities} took longer than {maxTimeMs}ms!");
+            }
+        }
+        sim.CheckFullDeterminism();
+    }
+
+    [Test]
+    public void TestCrc() {
+        var numEntities = 40000;
+        // Maximum update time to get stable 60 FPS, not respecting rendering 
+        var maxTimeMs = 5;
+        var steps = 100;
+        var sim = CreateBaseSim(numEntities);
+
+        for (int i = 0; i < steps; i++)
+        {        
+            sim.Step();
+        }
+        
+        for (int i = 0; i < steps; i++) {
+            byte[] bytes = new byte[1];
+            var duration = Clock.TimeIt(() => {
+                bytes = sim.currentState.GetChecksum();
+            });
+            
+            if (duration > maxTimeMs) {
+                Assert.Fail($"Calculating checksum {bytes} took longer than {maxTimeMs}ms! It took {duration}ms");
+            }
+        }
+    }
+
+    private Simulation CreateBaseSim(int numEntities) {
         var sim = new Simulation(0, 2);
 
         for (int i = 0; i < numEntities; i++)
@@ -44,19 +88,6 @@ public class SimulationTests
         sim.lastState = new(sim.currentState);
         sim.twoStepsAgoState = new(sim.currentState);
 
-        for (int i = 0; i < steps; i++)
-        {
-            var duration = Clock.TimeIt(() =>
-            {
-                sim.Step();
-            });
-            Console.WriteLine($"Simulation stepping {numEntities} took {duration}ms");
-            if (duration > maxTimeMs)
-            {
-                Assert.Fail($"Simulation stepping {numEntities} took longer than {maxTimeMs}ms!");
-            }
-        }
-        sim.CheckFullDeterminism();
+        return sim;
     }
-
 }

@@ -1,4 +1,8 @@
+using System.IO.Hashing;
+using System.Runtime.InteropServices;
+
 namespace Simulation;
+
 public class SimulationState
 {
     public Dictionary<int, int> EntityIdCounters;
@@ -39,10 +43,39 @@ public class SimulationState
 
     public Entity SpawnEntity(Entity entity, int playerId) {
         var id = GetNextId(playerId);
-        Console.WriteLine("Spawned Entity!");
         entity.EntityId = id;
         entity.OwningPlayer = playerId;
         this.Entities.Add(id, entity);
         return entity;
+    }
+
+
+    // TODO: Each entity is copied here
+    private byte[] GetEntityBytes(Entity entity) {
+        int size = Marshal.SizeOf(entity);
+        byte[] arr = new byte[size];
+
+        IntPtr ptr = IntPtr.Zero;
+        try
+        {
+            ptr = Marshal.AllocHGlobal(size);
+            Marshal.StructureToPtr(entity, ptr, true);
+            Marshal.Copy(ptr, arr, 0, size);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(ptr);
+        }
+        return arr;
+    }
+
+    public byte[] GetChecksum() {
+        var crc = new Crc32();
+        
+        foreach(var entity in Entities.Values) {
+            crc.Append(GetEntityBytes(entity));
+        }
+
+        return crc.GetCurrentHash();
     }
 }
