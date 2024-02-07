@@ -57,8 +57,10 @@ public class NetworkPacketTests
     }
 
     [Test]
-    public void TestPacketWithDefaultType() {
-        var pack = new StateChangePacket() {
+    public void TestPacketWithDefaultType()
+    {
+        var pack = new StateChangePacket()
+        {
             NewClientState = ClientState.Disconnected,
             PlayerId = 13,
         };
@@ -108,7 +110,7 @@ public class NetworkPacketTests
             }
         });
 
-        Console.WriteLine($"Serializing {numPackets} packets ({bytes} bytes) took {diff}ms!");
+        Debug.Log($"Serializing {numPackets} packets ({bytes} bytes) took {diff}ms!");
 
         Assert.That(diff, Is.LessThan(maxTime), $"Serialization of {numPackets} took longer than {maxTime}ms!");
     }

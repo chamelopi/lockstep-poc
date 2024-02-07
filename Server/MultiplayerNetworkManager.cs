@@ -83,12 +83,12 @@ public class MultiplayerNetworkManager : INetworkManager
                 case EventType.Connect:
                     if (!isServer)
                     {
-                        Console.WriteLine("Connected to server!");
+                        Debug.Log("Connected to server!");
                     }
                     else
                     {
                         // TODO: This logic will break if we automatically handle disconnects - peer IDs might change!
-                        Console.WriteLine("Peer " + netEvent.Peer.ID + " connected, will be assigned ID " + (remotePeers.Count + 1));
+                        Debug.Log("Peer " + netEvent.Peer.ID + " connected, will be assigned ID " + (remotePeers.Count + 1));
                         var greeting = new ServerGreetingPacket
                         {
                             PkgType = PacketType.ServerGreeting,
@@ -100,7 +100,7 @@ public class MultiplayerNetworkManager : INetworkManager
                     }
                     break;
                 case EventType.Disconnect:
-                    Console.WriteLine("Peer " + netEvent.Peer.ID + " disconnected!");
+                    Debug.Log("Peer " + netEvent.Peer.ID + " disconnected!");
 
                     {
                         var playerId = remotePeers.Where(client => client.Value.PeerId == netEvent.Peer.ID).First().Key;
@@ -111,13 +111,13 @@ public class MultiplayerNetworkManager : INetworkManager
                 case EventType.Timeout:
                     if (isServer)
                     {
-                        Console.WriteLine("Connection to peer " + netEvent.Peer.ID + " has timed out!");
+                        Debug.Log("Connection to peer " + netEvent.Peer.ID + " has timed out!");
                         var playerId = remotePeers.Where(client => client.Value.PeerId == netEvent.Peer.ID).First().Key;
                         remotePeers.Remove(playerId);
                     }
                     else
                     {
-                        Console.WriteLine("Connection has timed out :(");
+                        Debug.Log("Connection has timed out :(");
                     }
                     break;
                 case EventType.Receive:
@@ -126,14 +126,14 @@ public class MultiplayerNetworkManager : INetworkManager
                     {
                         if (isServer)
                         {
-                            Console.WriteLine("ERROR: Received ServerGreeting as Server, ignoring!");
+                            Debug.Log("ERROR: Received ServerGreeting as Server, ignoring!");
                             netEvent.Packet.Dispose();
                             break;
                         }
 
                         var greeting = NetworkPacket.Deserialize<ServerGreetingPacket>(netEvent.Packet);
 
-                        Console.WriteLine($"Received ServerGreeting. Our ID is {greeting.AssignedPlayerId}");
+                        Debug.Log($"Received ServerGreeting. Our ID is {greeting.AssignedPlayerId}");
 
                         myPlayerId = greeting.AssignedPlayerId;
 
@@ -164,7 +164,7 @@ public class MultiplayerNetworkManager : INetworkManager
                     {
                         var hello = NetworkPacket.Deserialize<HelloPacket>(netEvent.Packet);
 
-                        Console.WriteLine($"Received Hello from {hello.PlayerName}");
+                        Debug.Log($"Received Hello from {hello.PlayerName}");
 
                         // If we don't know them yet, register them and send our own hello back
                         if (!remotePeers.ContainsKey(hello.PlayerId))
@@ -191,7 +191,7 @@ public class MultiplayerNetworkManager : INetworkManager
                             });
                             netEvent.Peer.Send(0, ref ourHello);
 
-                            Console.WriteLine("Greeted them back!");
+                            Debug.Log("Greeted them back!");
                         }
 
                         CallHandler(type, hello);
@@ -199,7 +199,7 @@ public class MultiplayerNetworkManager : INetworkManager
                     else if (type == PacketType.StateChange)
                     {
                         var stateChange = NetworkPacket.Deserialize<StateChangePacket>(netEvent.Packet);
-                        Console.WriteLine($"Received StateChange from {stateChange.PlayerId}: {stateChange.NewClientState}");
+                        Debug.Log($"Received StateChange from {stateChange.PlayerId}: {stateChange.NewClientState}");
                         if (!remotePeers.ContainsKey(stateChange.PlayerId)) {
                             // Drop packet because we don't know this player yet. Once they send us a HELLO packet,
                             // we will know their current state.
@@ -220,10 +220,10 @@ public class MultiplayerNetworkManager : INetworkManager
                     else if (type == PacketType.EndOfTurn)
                     {
                         var endOfTurn = NetworkPacket.Deserialize<EndOfTurnPacket>(netEvent.Packet);
-                        //Console.WriteLine($"Player {endOfTurn.PlayerId} is done with their turn {endOfTurn.CurrentTurn}!");
+                        //Debug.Log($"Player {endOfTurn.PlayerId} is done with their turn {endOfTurn.CurrentTurn}!");
                         remotePeers[endOfTurn.PlayerId].CurrentTurnDone = true;
                     } else {
-                        Console.WriteLine("Unknown Packet received from " + netEvent.Peer.ID + " - Channel ID: " + netEvent.ChannelID + ", Data length: " + netEvent.Packet.Length);
+                        Debug.LogWarning("Unknown Packet received from " + netEvent.Peer.ID + " - Channel ID: " + netEvent.ChannelID + ", Data length: " + netEvent.Packet.Length);
                     }
                     netEvent.Packet.Dispose();
                     break;
@@ -343,7 +343,7 @@ public class MultiplayerNetworkManager : INetworkManager
             
             host.Broadcast(0, ref pack);
             lastTurnSignaled = currentTurn;
-            //Console.WriteLine($"Player {myPlayerId} is done with Turn {currentTurn}");
+            //Debug.Log($"Player {myPlayerId} is done with Turn {currentTurn}");
         }
     }
 }

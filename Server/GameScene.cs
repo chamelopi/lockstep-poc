@@ -23,7 +23,7 @@ public class GameScene : Scene
         myPlayerId = networkManager.GetLocalPlayer();
         this.camera = camera;
         var startTime = DateTime.Now;
-        Console.WriteLine($"GAME START at {startTime.ToLongTimeString()}.{startTime.Millisecond}");
+        Debug.Log($"GAME START at {startTime.ToLongTimeString()}.{startTime.Millisecond}");
     }
 
     public Scene? Run()
@@ -51,7 +51,7 @@ public class GameScene : Scene
         {
             Raylib.DrawText("Running full determinism check....", 10, 10, 30, Color.BLACK);
             sim.CheckFullDeterminism();
-            Console.WriteLine("Simulation re-simulated successfully, we should be deterministic!");
+            Debug.Log("Simulation re-simulated successfully, we should be deterministic!");
         }
 
         // Allow control of simulation speed. Simulation speed goes UP when turn duration goes DOWN
@@ -97,17 +97,17 @@ public class GameScene : Scene
     void HandleRemoteCommand(NetworkPacket packet)
     {
         var commandPacket = (CommandPacket)packet;
-        Console.WriteLine($"Remote command received! {commandPacket.Command}");
+        Debug.Log($"Remote command received! {commandPacket.Command}");
 
         if (commandPacket.Command.TargetTurn < sim.currentTurn)
         {
-            Console.WriteLine($"ERROR: Received command for past turn: {commandPacket.Command.TargetTurn}. Discarding it.");
+            Debug.LogError($"ERROR: Received command for past turn: {commandPacket.Command.TargetTurn}. Discarding it.");
             return;
         }
 
         if (commandPacket.PlayerId != commandPacket.PlayerId)
         {
-            Console.WriteLine($"ERROR: Received command for player {commandPacket.PlayerId} from player {commandPacket.PlayerId}!");
+            Debug.LogError($"ERROR: Received command for player {commandPacket.PlayerId} from player {commandPacket.PlayerId}!");
             return;
         }
 
@@ -144,7 +144,7 @@ public class GameScene : Scene
                     AddCommand(cmd);
                     hit = true;
 
-                    Console.WriteLine($"New command: selected entity {entity.EntityId}");
+                    Debug.Log($"New command: selected entity {entity.EntityId}");
                     // Select only one entity this way
                     break;
                 }
@@ -160,7 +160,7 @@ public class GameScene : Scene
                 };
                 AddCommand(cmd);
 
-                Console.WriteLine($"New command: deselected everything");
+                Debug.Log($"New command: deselected everything");
             }
         }
     }
@@ -181,7 +181,7 @@ public class GameScene : Scene
             };
             AddCommand(spawnCommand);
 
-            Console.WriteLine($"New command: spawn entity");
+            Debug.Log($"New command: spawn entity");
         }
     }
 
@@ -203,7 +203,7 @@ public class GameScene : Scene
                 TargetTurn = sim.currentTurn + 2,
             };
             AddCommand(cmd);
-            Console.WriteLine($"New command: move to {cmd.TargetX}/{cmd.TargetY}");
+            Debug.Log($"New command: move to {cmd.TargetX}/{cmd.TargetY}");
         }
     }
 

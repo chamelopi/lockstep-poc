@@ -100,7 +100,7 @@ public class Simulation
     {
         if (command.PlayerId <= 0 || command.PlayerId > this.playerCount)
         {
-            Console.WriteLine($"invalid player ID {command.PlayerId} in command! Discarding command");
+            Debug.LogError($"invalid player ID {command.PlayerId} in command! Discarding command");
             return;
         }
 
@@ -113,7 +113,7 @@ public class Simulation
         float alpha = msSinceStartOfTurn / (float)turnSpeedMs;
         if (alpha > 1.0 || alpha < 0.0)
         {
-            //Console.WriteLine($"alpha is {alpha} for interpolation - that seems wrong! :D");
+            //Debug.Log($"alpha is {alpha} for interpolation - that seems wrong! :D");
         }
         // To prevent teleporting - if we do have to clamp alpha here, the game will stutter however.
         alpha = Math.Min(1.0f, Math.Max(0.0f, alpha));
@@ -198,8 +198,8 @@ public class Simulation
 
         if (!stateA.Entities.Keys.ToHashSet().SetEquals(stateB.Entities.Keys))
         {
-            Console.WriteLine("A: " + string.Join(", ", stateA.Entities.Keys.ToArray()));
-            Console.WriteLine("B: " + string.Join(", ", stateB.Entities.Keys.ToArray()));
+            Debug.Log("A: " + string.Join(", ", stateA.Entities.Keys.ToArray()));
+            Debug.Log("B: " + string.Join(", ", stateB.Entities.Keys.ToArray()));
             throw new SimulationNotDeterministicException($"Different entity IDs in both states!");
         }
 
@@ -230,7 +230,7 @@ public class Simulation
             stream.Write(serialized);
         }
 
-        Console.WriteLine("Successfully saved to replay file " + filename);
+        Debug.Log("Successfully saved to replay file " + filename);
     }
 
     public void LoadReplay(string filename)
@@ -251,10 +251,10 @@ public class Simulation
         this.AddCommands(replay.Commands);
         for (int i = 0; i < commandQueue.Count; i++)
         {
-            Console.WriteLine(commandQueue.UnorderedItems.ElementAt(i).ToString());
+            Debug.Log(commandQueue.UnorderedItems.ElementAt(i).ToString());
         }
 
-        Console.WriteLine("Successfully loaded from replay file " + filename);
+        Debug.Log("Successfully loaded from replay file " + filename);
     }
 
     internal void TogglePause()

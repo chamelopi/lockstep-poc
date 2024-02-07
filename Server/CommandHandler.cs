@@ -23,7 +23,7 @@ public class CommandHandler
                 HandleSpawnCommand(currentState, command);
                 break;
             default:
-                Console.WriteLine("CommandHandler: Unknown command type " + command.CommandType);
+                Debug.Log("CommandHandler: Unknown command type " + command.CommandType);
                 break;
         }
     }
