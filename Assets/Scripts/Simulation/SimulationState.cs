@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Simulation
 {
@@ -15,7 +16,7 @@ namespace Simulation
 
         public SimulationState(int numberOfPlayers)
         {
-            MaxEntitiesPerPlayer = (int)(Math.Pow(2, 31) / numberOfPlayers);
+            MaxEntitiesPerPlayer = (int)(Mathf.Pow(2, 31) / numberOfPlayers);
             Entities = new();
             EntityIdCounters = new();
             for (int i = 1; i <= numberOfPlayers; i++)

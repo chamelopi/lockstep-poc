@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Server;
+using Simulation.Util;
 using UnityEngine;
 
 namespace Simulation
@@ -243,7 +244,8 @@ namespace Simulation
             Replay replay;
             using (var stream = new StreamReader(filename))
             {
-                replay = JsonSerializer.Deserialize<Replay>(stream.BaseStream, NetworkPacket.options);
+                // TODO: This probably uses a lot of memory for large files
+                replay = JsonSerializer.Deserialize<Replay>(stream.ReadToEnd(), NetworkPacket.options);
             }
             if (replay == null)
             {
