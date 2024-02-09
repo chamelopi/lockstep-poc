@@ -25,13 +25,16 @@ public class Networking : MonoBehaviour
 
     public void Update() {
         if (networkManager != null) {
+            networkManager.PollEvents();
+
             statusOutText.text = networkManager is SingleplayerNetworkManager ? "Singleplayer" : (networkManager.IsServer() ? "Server" : "Client");
 
-            statusOutText.text += "\nConnected players: " + networkManager.GetClients().Count();
-            statusOutText.text += "\nPlayerID: " + networkManager.GetLocalClient().PlayerId;
-            statusOutText.text += "\nState: " + networkManager.GetLocalClient().State;
-
-            networkManager.PollEvents();
+            try {
+                statusOutText.text += "\nConnected players: " + networkManager.GetClients().Count();
+                statusOutText.text += "\nPlayerID: " + networkManager.GetLocalClient().PlayerId;
+                statusOutText.text += "\nState: " + networkManager.GetLocalClient().State;
+            } catch (Exception e) {
+            }
         }
     }
 

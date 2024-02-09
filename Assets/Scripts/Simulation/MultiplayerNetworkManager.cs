@@ -75,7 +75,8 @@ namespace Server
                 // Check all events 
                 if (host.CheckEvents(out netEvent) <= 0)
                 {
-                    if (host.Service(15, out netEvent) <= 0)
+                    // No timeout (nonblocking) because we run in Unity's game loop
+                    if (host.Service(0, out netEvent) <= 0)
                     {
                         break;
                     }
@@ -87,12 +88,12 @@ namespace Server
                     case ENet.EventType.Connect:
                         if (!isServer)
                         {
-                            Debug.Log("Connected to server!");
+                            Debug.Log("NM: Connected to server!");
                         }
                         else
                         {
                             // TODO: This logic will break if we automatically handle disconnects - peer IDs might change!
-                            Debug.Log("Peer " + netEvent.Peer.ID + " connected, will be assigned ID " + (remotePeers.Count + 1));
+                            Debug.Log("NM: Peer " + netEvent.Peer.ID + " connected, will be assigned ID " + (remotePeers.Count + 1));
                             var greeting = new ServerGreetingPacket
                             {
                                 PkgType = PacketType.ServerGreeting,
@@ -104,7 +105,7 @@ namespace Server
                         }
                         break;
                     case ENet.EventType.Disconnect:
-                        Debug.LogWarning("Peer " + netEvent.Peer.ID + " disconnected!");
+                        Debug.LogWarning("NM: Peer " + netEvent.Peer.ID + " disconnected!");
 
                         {
                             var playerId = remotePeers.Where(client => client.Value.PeerId == netEvent.Peer.ID).First().Key;
@@ -115,13 +116,13 @@ namespace Server
                     case ENet.EventType.Timeout:
                         if (isServer)
                         {
-                            Debug.LogError("Connection to peer " + netEvent.Peer.ID + " has timed out!");
+                            Debug.LogError("NM: Connection to peer " + netEvent.Peer.ID + " has timed out!");
                             var playerId = remotePeers.Where(client => client.Value.PeerId == netEvent.Peer.ID).First().Key;
                             remotePeers.Remove(playerId);
                         }
                         else
                         {
-                            Debug.LogError("Connection has timed out :(");
+                            Debug.LogError("NM: Connection has timed out :(");
                         }
                         break;
                     case ENet.EventType.Receive:
@@ -130,14 +131,14 @@ namespace Server
                         {
                             if (isServer)
                             {
-                                Debug.LogWarning("Received ServerGreeting as Server, ignoring!");
+                                Debug.LogWarning("NM: Received ServerGreeting as Server, ignoring!");
                                 netEvent.Packet.Dispose();
                                 break;
                             }
 
                             var greeting = NetworkPacket.Deserialize<ServerGreetingPacket>(netEvent.Packet);
 
-                            Debug.Log($"Received ServerGreeting. Our ID is {greeting.AssignedPlayerId}");
+                            Debug.Log($"NM: Received ServerGreeting. Our ID is {greeting.AssignedPlayerId}");
 
                             myPlayerId = greeting.AssignedPlayerId;
 
@@ -168,7 +169,7 @@ namespace Server
                         {
                             var hello = NetworkPacket.Deserialize<HelloPacket>(netEvent.Packet);
 
-                            Debug.Log($"Received Hello from {hello.PlayerName}");
+                            Debug.Log($"NM: Received Hello from {hello.PlayerName}");
 
                             // If we don't know them yet, register them and send our own hello back
                             if (!remotePeers.ContainsKey(hello.PlayerId))
@@ -195,7 +196,7 @@ namespace Server
                                 });
                                 netEvent.Peer.Send(0, ref ourHello);
 
-                                Debug.Log("Greeted them back!");
+                                Debug.Log("NM: Greeted them back!");
                             }
 
                             CallHandler(type, hello);
@@ -203,7 +204,7 @@ namespace Server
                         else if (type == PacketType.StateChange)
                         {
                             var stateChange = NetworkPacket.Deserialize<StateChangePacket>(netEvent.Packet);
-                            Debug.Log($"Received StateChange from {stateChange.PlayerId}: {stateChange.NewClientState}");
+                            Debug.Log($"NM: Received StateChange from {stateChange.PlayerId}: {stateChange.NewClientState}");
                             if (!remotePeers.ContainsKey(stateChange.PlayerId))
                             {
                                 // Drop packet because we don't know this player yet. Once they send us a HELLO packet,
@@ -230,7 +231,7 @@ namespace Server
                         }
                         else
                         {
-                            Debug.LogWarning("Unknown Packet received from " + netEvent.Peer.ID + " - Channel ID: " + netEvent.ChannelID + ", Data length: " + netEvent.Packet.Length);
+                            Debug.LogWarning("NM: Unknown Packet received from " + netEvent.Peer.ID + " - Channel ID: " + netEvent.ChannelID + ", Data length: " + netEvent.Packet.Length);
                         }
                         netEvent.Packet.Dispose();
                         break;
@@ -350,7 +351,6 @@ namespace Server
 
                 host.Broadcast(0, ref pack);
                 lastTurnSignaled = currentTurn;
-                //Debug.Log($"Player {myPlayerId} is done with Turn {currentTurn}");
             }
         }
     }
