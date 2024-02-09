@@ -1,12 +1,12 @@
+#nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Server;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Networking : MonoBehaviour
 {
@@ -16,6 +16,7 @@ public class Networking : MonoBehaviour
     public GameObject portInput;
     public GameObject statusOutput;
     public GameObject connectUI;
+    public GameObject simulationManagerPrefab;
 
     private TextMeshProUGUI statusOutText;
 
@@ -29,12 +30,20 @@ public class Networking : MonoBehaviour
 
             statusOutText.text = networkManager is SingleplayerNetworkManager ? "Singleplayer" : (networkManager.IsServer() ? "Server" : "Client");
 
+            // TODO: Add proper detection for if we are connected instead of dirty try/catch
             try {
                 statusOutText.text += "\nConnected players: " + networkManager.GetClients().Count();
                 statusOutText.text += "\nPlayerID: " + networkManager.GetLocalClient().PlayerId;
                 statusOutText.text += "\nState: " + networkManager.GetLocalClient().State;
             } catch (Exception e) {
             }
+        }
+
+        if (SimulationManager.sim != null) {
+            statusOutText.text += "\nSimulation turn: " + SimulationManager.sim.currentTurn;
+            statusOutText.text += "\nSimulation paused? " + SimulationManager.sim.isPaused;
+            statusOutText.text += "\nSimulation entity count: " + SimulationManager.sim.currentState.Entities.Count;
+            statusOutText.text += "\nSimulation turn speed (ms):" + SimulationManager.sim.turnSpeedMs;
         }
     }
 
@@ -51,6 +60,7 @@ public class Networking : MonoBehaviour
             Debug.Log("Server created successfully!");
 
             connectUI.SetActive(false);
+            Instantiate(simulationManagerPrefab);
         } else {
             Debug.LogError("Could not parse port!");
         }
@@ -67,6 +77,7 @@ public class Networking : MonoBehaviour
             Debug.Log("Game joined successfully!");
 
             connectUI.SetActive(false);
+            Instantiate(simulationManagerPrefab);
         } else {
             Debug.LogError("Could not parse port!");
         }
