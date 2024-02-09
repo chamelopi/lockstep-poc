@@ -806,7 +806,7 @@ namespace Simulation.Util
             Debug.Assert(_comparer is not null);
             Debug.Assert(0 <= nodeIndex && nodeIndex < _size);
 
-            IComparer<TPriority> comparer = _comparer;
+            IComparer<TPriority> comparer = _comparer!;
             (TElement Element, TPriority Priority)[] nodes = _nodes;
 
             while (nodeIndex > 0)
@@ -888,7 +888,7 @@ namespace Simulation.Util
             Debug.Assert(_comparer is not null);
             Debug.Assert(0 <= nodeIndex && nodeIndex < _size);
 
-            IComparer<TPriority> comparer = _comparer;
+            IComparer<TPriority> comparer = _comparer!;
             (TElement Element, TPriority Priority)[] nodes = _nodes;
             int size = _size;
 

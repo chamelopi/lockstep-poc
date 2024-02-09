@@ -5,9 +5,6 @@
 2. On pause, send a packet to everyone to let them know about the pause
 
 ## Simulation features
-2. Split EntityID and PlayerID
-   - allow player to spawn entities (debug function)
-   - allow player to kill entities (debug function)
 3. Implement box select command
 4. Implement checksum calculation for Simulation State (e.g. CRC)
 5. Implement map (just a list of entities, loaded on startup)
@@ -28,9 +25,8 @@
 
 ## Unity
 14. Port to Unity/Integrate into Unity
-    - Decide if this should be an engine-agnostic library, or tightly integrated in our HGLG codebase
-        - If Engine agnostic, how do we use a .NET Core DLL in Unity? Is that possible?
-    - Refactor scenes so that they can be called/ported to MonoBehaviour
-    - Use timing based on Unity's delta
-    - Refactor ENetNetworkManager to allow us to use another networking library/RPCs instead
-    - Check if we should use DOTS.Net or keep ENet
+    - Migrate rendering
+    - Migrate replay load/store
+    - Migrate simulation execution
+    - Migrate input handling
+    - Migrate existing unit tests to still work
