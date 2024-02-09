@@ -1,8 +1,8 @@
-namespace Server
-{
-    public interface Scene
-    {
-        ClientState GetState();
-        Scene? Run();
-    }
-}
+// namespace Server
+// {
+//     public interface Scene
+//     {
+//         ClientState GetState();
+//         Scene? Run();
+//     }
+// }

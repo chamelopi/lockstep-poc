@@ -1,6 +1,9 @@
+#nullable enable
+
+using System;
+
 namespace Simulation
 {
-
     // long due to floating point determinism stuff - would be fixed point probably
     public struct Entity
     {
@@ -70,6 +73,11 @@ namespace Simulation
             var other = (Entity)obj;
             return X == other.X && Y == other.Y && VelocityX == other.VelocityX && VelocityY == other.VelocityY && Moving == other.Moving
                 && TargetX == other.TargetX && TargetY == other.TargetY && OwningPlayer == other.OwningPlayer;
+        }
+
+        public override readonly int GetHashCode()
+        {
+            return HashCode.Combine(X, Y, VelocityX, VelocityY, Moving, TargetX, TargetY, OwningPlayer);
         }
 
         public static bool operator ==(Entity left, Entity right)
