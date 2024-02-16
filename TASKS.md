@@ -25,7 +25,10 @@
 
 ## Unity
 14. Port to Unity/Integrate into Unity
-    - Migrate rendering
+    - Handle simulation events (!= simulation commands)
+      - Spawn command -> create entity & cache mapping between ID in simulation and unity entity
+      - Move command -> set entity velocity (?)
+      - Movement stopped -> set entity velocity (?)
     - Migrate replay load/store
     - Migrate simulation execution
     - Migrate input handling
