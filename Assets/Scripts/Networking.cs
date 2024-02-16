@@ -7,6 +7,7 @@ using System.Linq;
 using Server;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Networking : MonoBehaviour
 {
@@ -20,30 +21,37 @@ public class Networking : MonoBehaviour
 
     private TextMeshProUGUI statusOutText;
 
-    public void Start() {
+    public void Start()
+    {
         statusOutText = statusOutput.GetComponent<TextMeshProUGUI>();
     }
 
-    public void Update() {
-        if (networkManager != null) {
+    public void Update()
+    {
+        if (networkManager != null)
+        {
             networkManager.PollEvents();
 
             statusOutText.text = networkManager is SingleplayerNetworkManager ? "Singleplayer" : (networkManager.IsServer() ? "Server" : "Client");
 
             // TODO: Add proper detection for if we are connected instead of dirty try/catch
-            try {
+            try
+            {
                 statusOutText.text += "\nConnected players: " + networkManager.GetClients().Count();
                 statusOutText.text += "\nPlayerID: " + networkManager.GetLocalClient().PlayerId;
                 statusOutText.text += "\nState: " + networkManager.GetLocalClient().State;
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
             }
         }
 
-        if (SimulationManager.sim != null) {
+        if (SimulationManager.sim != null)
+        {
             statusOutText.text += "\nSimulation turn: " + SimulationManager.sim.currentTurn;
             statusOutText.text += "\nSimulation paused? " + SimulationManager.sim.isPaused;
             statusOutText.text += "\nSimulation entity count: " + SimulationManager.sim.currentState.Entities.Count;
-            statusOutText.text += "\nSimulation turn speed (ms):" + SimulationManager.sim.turnSpeedMs;
+            statusOutText.text += "\nSimulation turn speed (ms): " + SimulationManager.sim.turnSpeedMs;
         }
     }
 
@@ -59,10 +67,12 @@ public class Networking : MonoBehaviour
             networkManager = MultiplayerNetworkManager.NewServer(port);
             Debug.Log("Server created successfully!");
 
-            connectUI.SetActive(false);
-            Instantiate(simulationManagerPrefab);
-        } else {
+            GoToGame();
+        }
+        else
+        {
             Debug.LogError("Could not parse port!");
+            statusOutText.text = "Invalid Port!";
         }
     }
 
@@ -76,11 +86,20 @@ public class Networking : MonoBehaviour
             networkManager = MultiplayerNetworkManager.NewClient(hostname, port);
             Debug.Log("Game joined successfully!");
 
-            connectUI.SetActive(false);
-            Instantiate(simulationManagerPrefab);
-        } else {
+            GoToGame();
+        }
+        else
+        {
             Debug.LogError("Could not parse port!");
+            statusOutText.text = "Invalid Port!";
         }
     }
 
+
+    internal void GoToGame()
+    {
+        connectUI.SetActive(false);
+        Instantiate(simulationManagerPrefab);
+        SceneManager.LoadScene("GameScene", LoadSceneMode.Additive);
+    }
 }
