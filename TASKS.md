@@ -24,11 +24,11 @@
 13. Use or implement a fixed point math lib
 
 ## Unity
-14. Port to Unity/Integrate into Unity
-    - Handle simulation events (!= simulation commands)
-      - Spawn command -> create entity & cache mapping between ID in simulation and unity entity
-      - Move command -> set entity velocity (?)
-      - Movement stopped -> set entity velocity (?)
+14. Port to Unity/Integrate into Unity    
+    - Synchronize sim with GameObjects/Entities for rendering:
+      - GameObjects have a SimulatedMovement component and **know their entity ID within the simulation**
+      - On each simulation step, they retrieve their last and current state, and interpolate between them
+        - TODO: Is this inefficient?
     - Migrate replay load/store
     - Migrate simulation execution
     - Migrate input handling
