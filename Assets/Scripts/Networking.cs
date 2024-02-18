@@ -17,9 +17,14 @@ public class Networking : MonoBehaviour
     public GameObject portInput;
     public GameObject statusOutput;
     public GameObject connectUI;
+    public GameObject uiContainer;
+    public GameObject startGameButton;
     public GameObject simulationManagerPrefab;
 
     private TextMeshProUGUI statusOutText;
+
+
+    private float mockLoadingTimeSeconds;
 
     public void Start()
     {
@@ -31,6 +36,13 @@ public class Networking : MonoBehaviour
         if (networkManager != null)
         {
             networkManager.PollEvents();
+
+            // If all players are ready
+            if (networkManager.IsServer() && networkManager.GetClients().Where(cl => cl.State == ClientState.Ready).Count() == networkManager.GetClients().Count())
+            {
+                Debug.Log("All players are ready - can start the game!");
+                startGameButton.SetActive(true);
+            }
 
             statusOutText.text = networkManager is SingleplayerNetworkManager ? "Singleplayer" : (networkManager.IsServer() ? "Server" : "Client");
 
@@ -44,6 +56,8 @@ public class Networking : MonoBehaviour
             catch (Exception e)
             {
             }
+
+            MockLoadMap();
         }
 
         if (SimulationManager.sim != null)
@@ -53,6 +67,38 @@ public class Networking : MonoBehaviour
             statusOutText.text += "\nSimulation entity count: " + SimulationManager.sim.currentState.Entities.Count;
             statusOutText.text += "\nSimulation turn speed (ms): " + SimulationManager.sim.turnSpeedMs;
         }
+    }
+
+    private void MockLoadMap()
+    {
+        if (mockLoadingTimeSeconds > 0)
+        {
+            mockLoadingTimeSeconds -= Time.deltaTime;
+            if (mockLoadingTimeSeconds <= 0)
+            {
+                networkManager?.UpdateLocalState(ClientState.Ready);
+                Debug.Log("Finished mock loading the map - sending ready message!");
+            }
+        }
+    }
+
+    public void StartGame()
+    {
+        var startPacket = new StartGamePacket()
+        {
+            PkgType = PacketType.StartGame,
+        };
+        networkManager?.QueuePacket(startPacket);
+        HideMenuUI();
+    }
+
+    private void HideMenuUI()
+    {
+        Debug.Log("Triggering game start!");
+        // Hide start game button
+        startGameButton.SetActive(false);
+        // Hide menu background
+        uiContainer.SetActive(false);
     }
 
 
@@ -101,5 +147,19 @@ public class Networking : MonoBehaviour
         connectUI.SetActive(false);
         Instantiate(simulationManagerPrefab);
         SceneManager.LoadScene("GameScene", LoadSceneMode.Additive);
+
+        mockLoadingTimeSeconds = 5;
+
+        if (networkManager != null && !networkManager.IsServer())
+        {
+            // TODO: Should we handle this in network manager instead of in the scene?
+            networkManager?.AddCallback(PacketType.StartGame, _ =>
+            {
+                // FIXME: We don't seem to have a player ID right now?
+                networkManager.UpdateLocalState(ClientState.InGame);
+                HideMenuUI();
+                networkManager.RemoveCallback(PacketType.StartGame);
+            });
+        }
     }
 }

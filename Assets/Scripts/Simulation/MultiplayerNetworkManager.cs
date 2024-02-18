@@ -126,118 +126,124 @@ namespace Server
                         }
                         break;
                     case ENet.EventType.Receive:
-                        var type = NetworkPacket.DetectType(netEvent.Packet);
-                        if (type == PacketType.ServerGreeting)
+                        using (netEvent.Packet)
                         {
-                            if (isServer)
-                            {
-                                Debug.LogWarning("NM: Received ServerGreeting as Server, ignoring!");
-                                netEvent.Packet.Dispose();
-                                break;
-                            }
 
-                            var greeting = NetworkPacket.Deserialize<ServerGreetingPacket>(netEvent.Packet);
-
-                            Debug.Log($"NM: Received ServerGreeting. Our ID is {greeting.AssignedPlayerId}");
-
-                            myPlayerId = greeting.AssignedPlayerId;
-
-                            var myState = new Client
-                            {
-                                CurrentTurnDone = false,
-                                PeerId = netEvent.Peer.ID,
-                                PlayerId = greeting.AssignedPlayerId,
-                                State = ClientState.Waiting,
-                                PlayerName = "Player " + myPlayerId,
-                            };
-                            remotePeers.Add(greeting.AssignedPlayerId, myState);
-
-                            // Send Hello to everyone
-                            var hello = NetworkPacket.Serialize(new HelloPacket
-                            {
-                                PkgType = PacketType.Hello,
-                                ClientState = myState.State,
-                                PlayerId = myPlayerId,
-                                PlayerName = myState.PlayerName,
-                                CurrentTurnDone = myState.CurrentTurnDone,
-                            });
-                            host.Broadcast(0, ref hello);
-
-                            CallHandler(type, greeting);
                         }
-                        else if (type == PacketType.Hello)
-                        {
-                            var hello = NetworkPacket.Deserialize<HelloPacket>(netEvent.Packet);
-
-                            Debug.Log($"NM: Received Hello from {hello.PlayerName}");
-
-                            // If we don't know them yet, register them and send our own hello back
-                            if (!remotePeers.ContainsKey(hello.PlayerId))
-                            {
-                                var theirState = new Client
-                                {
-                                    CurrentTurnDone = hello.CurrentTurnDone,
-                                    PeerId = netEvent.Peer.ID,
-                                    PlayerId = hello.PlayerId,
-                                    State = hello.ClientState,
-                                    PlayerName = hello.PlayerName,
-                                };
-                                remotePeers.Add(hello.PlayerId, theirState);
-
-                                var myState = remotePeers[myPlayerId];
-                                // Send Hello back
-                                var ourHello = NetworkPacket.Serialize(new HelloPacket
-                                {
-                                    PkgType = PacketType.Hello,
-                                    ClientState = myState.State,
-                                    PlayerId = myPlayerId,
-                                    PlayerName = myState.PlayerName,
-                                    CurrentTurnDone = myState.CurrentTurnDone,
-                                });
-                                netEvent.Peer.Send(0, ref ourHello);
-
-                                Debug.Log("NM: Greeted them back!");
-                            }
-
-                            CallHandler(type, hello);
-                        }
-                        else if (type == PacketType.StateChange)
-                        {
-                            var stateChange = NetworkPacket.Deserialize<StateChangePacket>(netEvent.Packet);
-                            Debug.Log($"NM: Received StateChange from {stateChange.PlayerId}: {stateChange.NewClientState}");
-                            if (!remotePeers.ContainsKey(stateChange.PlayerId))
-                            {
-                                // Drop packet because we don't know this player yet. Once they send us a HELLO packet,
-                                // we will know their current state.
-                                break;
-                            }
-                            remotePeers[stateChange.PlayerId].State = stateChange.NewClientState;
-
-                            CallHandler(type, stateChange);
-                        }
-                        else if (type == PacketType.StartGame)
-                        {
-                            CallHandler(type, NetworkPacket.Deserialize<StartGamePacket>(netEvent.Packet));
-                        }
-                        else if (type == PacketType.Command)
-                        {
-                            CallHandler(type, NetworkPacket.Deserialize<CommandPacket>(netEvent.Packet));
-                        }
-                        else if (type == PacketType.EndOfTurn)
-                        {
-                            var endOfTurn = NetworkPacket.Deserialize<EndOfTurnPacket>(netEvent.Packet);
-                            //Debug.Log($"Player {endOfTurn.PlayerId} is done with their turn {endOfTurn.CurrentTurn}!");
-                            remotePeers[endOfTurn.PlayerId].CurrentTurnDone = true;
-                        }
-                        else
-                        {
-                            Debug.LogWarning("NM: Unknown Packet received from " + netEvent.Peer.ID + " - Channel ID: " + netEvent.ChannelID + ", Data length: " + netEvent.Packet.Length);
-                        }
-                        netEvent.Packet.Dispose();
                         break;
                     default:
                         break;
                 }
+            }
+        }
+
+        private void HandleReceivedPacket(ENet.Event netEvent)
+        {
+            var type = NetworkPacket.DetectType(netEvent.Packet);
+            if (type == PacketType.ServerGreeting)
+            {
+                if (isServer)
+                {
+                    Debug.LogWarning("NM: Received ServerGreeting as Server, ignoring!");
+                    return;
+                }
+
+                var greeting = NetworkPacket.Deserialize<ServerGreetingPacket>(netEvent.Packet);
+
+                Debug.Log($"NM: Received ServerGreeting. Our ID is {greeting.AssignedPlayerId}");
+
+                myPlayerId = greeting.AssignedPlayerId;
+
+                var myState = new Client
+                {
+                    CurrentTurnDone = false,
+                    PeerId = netEvent.Peer.ID,
+                    PlayerId = greeting.AssignedPlayerId,
+                    State = ClientState.Waiting,
+                    PlayerName = "Player " + myPlayerId,
+                };
+                remotePeers.Add(greeting.AssignedPlayerId, myState);
+
+                // Send Hello to everyone
+                var hello = NetworkPacket.Serialize(new HelloPacket
+                {
+                    PkgType = PacketType.Hello,
+                    ClientState = myState.State,
+                    PlayerId = myPlayerId,
+                    PlayerName = myState.PlayerName,
+                    CurrentTurnDone = myState.CurrentTurnDone,
+                });
+                host.Broadcast(0, ref hello);
+
+                CallHandler(type, greeting);
+            }
+            else if (type == PacketType.Hello)
+            {
+                var hello = NetworkPacket.Deserialize<HelloPacket>(netEvent.Packet);
+
+                Debug.Log($"NM: Received Hello from {hello.PlayerName}");
+
+                // If we don't know them yet, register them and send our own hello back
+                if (!remotePeers.ContainsKey(hello.PlayerId))
+                {
+                    var theirState = new Client
+                    {
+                        CurrentTurnDone = hello.CurrentTurnDone,
+                        PeerId = netEvent.Peer.ID,
+                        PlayerId = hello.PlayerId,
+                        State = hello.ClientState,
+                        PlayerName = hello.PlayerName,
+                    };
+                    remotePeers.Add(hello.PlayerId, theirState);
+
+                    var myState = remotePeers[myPlayerId];
+                    // Send Hello back
+                    var ourHello = NetworkPacket.Serialize(new HelloPacket
+                    {
+                        PkgType = PacketType.Hello,
+                        ClientState = myState.State,
+                        PlayerId = myPlayerId,
+                        PlayerName = myState.PlayerName,
+                        CurrentTurnDone = myState.CurrentTurnDone,
+                    });
+                    netEvent.Peer.Send(0, ref ourHello);
+
+                    Debug.Log("NM: Greeted them back!");
+                }
+
+                CallHandler(type, hello);
+            }
+            else if (type == PacketType.StateChange)
+            {
+                var stateChange = NetworkPacket.Deserialize<StateChangePacket>(netEvent.Packet);
+                Debug.Log($"NM: Received StateChange from {stateChange.PlayerId}: {stateChange.NewClientState}");
+                if (!remotePeers.ContainsKey(stateChange.PlayerId))
+                {
+                    // Drop packet because we don't know this player yet. Once they send us a HELLO packet,
+                    // we will know their current state.
+                    return;
+                }
+                remotePeers[stateChange.PlayerId].State = stateChange.NewClientState;
+
+                CallHandler(type, stateChange);
+            }
+            else if (type == PacketType.StartGame)
+            {
+                CallHandler(type, NetworkPacket.Deserialize<StartGamePacket>(netEvent.Packet));
+            }
+            else if (type == PacketType.Command)
+            {
+                CallHandler(type, NetworkPacket.Deserialize<CommandPacket>(netEvent.Packet));
+            }
+            else if (type == PacketType.EndOfTurn)
+            {
+                var endOfTurn = NetworkPacket.Deserialize<EndOfTurnPacket>(netEvent.Packet);
+                //Debug.Log($"Player {endOfTurn.PlayerId} is done with their turn {endOfTurn.CurrentTurn}!");
+                remotePeers[endOfTurn.PlayerId].CurrentTurnDone = true;
+            }
+            else
+            {
+                Debug.LogWarning("NM: Unknown Packet received from " + netEvent.Peer.ID + " - Channel ID: " + netEvent.ChannelID + ", Data length: " + netEvent.Packet.Length);
             }
         }
 
@@ -289,6 +295,7 @@ namespace Server
 
         public void UpdateLocalState(ClientState state)
         {
+            // TODO: Ensure that we have a local state!
             remotePeers[myPlayerId].State = state;
             // Notify other clients of the state change
             var changePacket = NetworkPacket.Serialize(new StateChangePacket()
