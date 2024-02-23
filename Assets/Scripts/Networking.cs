@@ -46,15 +46,11 @@ public class Networking : MonoBehaviour
 
             statusOutText.text = networkManager is SingleplayerNetworkManager ? "Singleplayer" : (networkManager.IsServer() ? "Server" : "Client");
 
-            // TODO: Add proper detection for if we are connected instead of dirty try/catch
-            try
+            if (networkManager.IsConnected())
             {
                 statusOutText.text += "\nConnected players: " + networkManager.GetClients().Count();
                 statusOutText.text += "\nPlayerID: " + networkManager.GetLocalClient().PlayerId;
                 statusOutText.text += "\nState: " + networkManager.GetLocalClient().State;
-            }
-            catch (Exception e)
-            {
             }
 
             MockLoadMap();

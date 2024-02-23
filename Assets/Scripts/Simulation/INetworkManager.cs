@@ -44,6 +44,11 @@ namespace Server
          */
         public void SignalNextTurn(int currentTurn);
 
+        /**
+         * Checks if this network manager is currently connected to a server
+         */
+        public bool IsConnected();
+
 
         delegate void PacketHandler(NetworkPacket packet);
     }

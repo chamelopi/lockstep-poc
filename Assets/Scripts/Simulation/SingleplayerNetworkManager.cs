@@ -82,5 +82,10 @@ namespace Server
         {
             // Do nothing
         }
+
+        public bool IsConnected()
+        {
+            return false;
+        }
     }
 }

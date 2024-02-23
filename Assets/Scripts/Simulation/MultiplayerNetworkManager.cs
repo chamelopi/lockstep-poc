@@ -5,8 +5,6 @@ using System.Linq;
 
 namespace Server
 {
-
-    // TODO: Refactor to be agnostic of the networking library
     public class MultiplayerNetworkManager : INetworkManager
     {
         private Host host;
@@ -62,6 +60,7 @@ namespace Server
             address.SetHost(ip);
             nm.host.Create();
             nm.peer = nm.host.Connect(address);
+
             return nm;
         }
 
@@ -128,7 +127,7 @@ namespace Server
                     case ENet.EventType.Receive:
                         using (netEvent.Packet)
                         {
-
+                            HandleReceivedPacket(netEvent);
                         }
                         break;
                     default:
@@ -154,7 +153,7 @@ namespace Server
 
                 myPlayerId = greeting.AssignedPlayerId;
 
-                var myState = new Client
+                var myClientState = new Client
                 {
                     CurrentTurnDone = false,
                     PeerId = netEvent.Peer.ID,
@@ -162,16 +161,16 @@ namespace Server
                     State = ClientState.Waiting,
                     PlayerName = "Player " + myPlayerId,
                 };
-                remotePeers.Add(greeting.AssignedPlayerId, myState);
+                remotePeers.Add(greeting.AssignedPlayerId, myClientState);
 
                 // Send Hello to everyone
                 var hello = NetworkPacket.Serialize(new HelloPacket
                 {
                     PkgType = PacketType.Hello,
-                    ClientState = myState.State,
+                    ClientState = myClientState.State,
                     PlayerId = myPlayerId,
-                    PlayerName = myState.PlayerName,
-                    CurrentTurnDone = myState.CurrentTurnDone,
+                    PlayerName = myClientState.PlayerName,
+                    CurrentTurnDone = myClientState.CurrentTurnDone,
                 });
                 host.Broadcast(0, ref hello);
 
@@ -196,15 +195,15 @@ namespace Server
                     };
                     remotePeers.Add(hello.PlayerId, theirState);
 
-                    var myState = remotePeers[myPlayerId];
+                    var myClientState = remotePeers[myPlayerId];
                     // Send Hello back
                     var ourHello = NetworkPacket.Serialize(new HelloPacket
                     {
                         PkgType = PacketType.Hello,
-                        ClientState = myState.State,
+                        ClientState = myClientState.State,
                         PlayerId = myPlayerId,
-                        PlayerName = myState.PlayerName,
-                        CurrentTurnDone = myState.CurrentTurnDone,
+                        PlayerName = myClientState.PlayerName,
+                        CurrentTurnDone = myClientState.CurrentTurnDone,
                     });
                     netEvent.Peer.Send(0, ref ourHello);
 
@@ -295,7 +294,12 @@ namespace Server
 
         public void UpdateLocalState(ClientState state)
         {
-            // TODO: Ensure that we have a local state!
+            if (!remotePeers.ContainsKey(myPlayerId))
+            {
+                Debug.LogError($"Could not update local state to {state}! No state for myself yet!");
+                return;
+            }
+
             remotePeers[myPlayerId].State = state;
             // Notify other clients of the state change
             var changePacket = NetworkPacket.Serialize(new StateChangePacket()
@@ -313,13 +317,28 @@ namespace Server
         {
             var serialized = NetworkPacket.Serialize(packet);
             host.Broadcast(0, ref serialized);
-            // TODO: It might not be optimal for all situations to always flush packets immediately
+            // TODO: It might not be optimal for all situations to always flush packets immediately. Maybe flush on poll?
             host.Flush();
         }
 
         public Client GetLocalClient()
         {
-            return remotePeers[myPlayerId];
+            if (IsConnected())
+            {
+                return remotePeers[myPlayerId];
+            }
+            else
+            {
+                return new Client()
+                {
+                    CurrentTurnDone = false,
+                    PeerId = 0,
+                    PlayerId = 0,
+                    PlayerName = "none",
+                    State = ClientState.Disconnected,
+                };
+            }
+
         }
 
         public bool CanAdvanceTurn()
@@ -358,6 +377,19 @@ namespace Server
 
                 host.Broadcast(0, ref pack);
                 lastTurnSignaled = currentTurn;
+            }
+        }
+
+        public bool IsConnected()
+        {
+            if (isServer)
+            {
+                // Server is always connected to itself, duh
+                return true;
+            }
+            else
+            {
+                return myPlayerId != 0 && remotePeers.ContainsKey(myPlayerId);
             }
         }
     }
