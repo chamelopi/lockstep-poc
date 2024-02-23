@@ -32,6 +32,7 @@ public class SimulationManager : MonoBehaviour
             }
             sim.currentState = new(sim.lastState);
             sim.twoStepsAgoState = new(sim.lastState);
+            sim.isPaused = true;
         }
     }
 
@@ -52,6 +53,25 @@ public class SimulationManager : MonoBehaviour
 
     void Update()
     {
+        // Spawn entity on key press
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (GameObject.Find("GroundPlane").GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitPoint, 80f))
+            {
+                sim!.AddCommand(new Command()
+                {
+                    CommandType = CommandType.Spawn,
+                    PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
+                    TargetX = FixedPointUtil.ToFixed(hitPoint.point.x),
+                    TargetY = FixedPointUtil.ToFixed(hitPoint.point.z),
+                    TargetTurn = sim.currentTurn + 2,
+                });
+            }
+        }
+        // TODO: Handle selection (box select/click select)
+        // TODO: Handle move command (right click)
+
         RunSimulation();
     }
 

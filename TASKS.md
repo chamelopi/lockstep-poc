@@ -6,7 +6,7 @@
 
 ## Simulation features
 3. Implement box select command
-4. Implement checksum calculation for Simulation State (e.g. CRC)
+4. Implement checksum calculation for Simulation State (e.g. CRC or just a hash sum)
 5. Implement map (just a list of entities, loaded on startup)
 6. Store initial state of simulation in replay
    - Fix CheckFullDeterminism by replicating this initial state as basis for the re-simulation
@@ -26,11 +26,17 @@
 
 ## Unity
 14. Port to Unity/Integrate into Unity    
-    - Synchronize sim with GameObjects/Entities for rendering:
-      - GameObjects have a SimulatedMovement component and **know their entity ID within the simulation**
-      - On each simulation step, they retrieve their last and current state, and interpolate between them
-        - TODO: Is this inefficient?
-    - Migrate replay load/store
-    - Migrate simulation execution
     - Migrate input handling
+      - We currently have the following problems:
+        - input not recognized (?) nothing is spawned
+          -> cannot be because sim is not running, it does not work in single player either
+        - server remains in "ready" state on game start
+          -> ???
+        - server can click "start" before lobby is full / even if a new client joins and is "waiting"
+          -> need to hide button again if a player joins 
+          -> need to set a max number of players in UI before creating game & check for that!
+        - game remains paused on start
+          -> this might be because we don't wait for the next frame when spawning the simulation manager!
+    - Migrate replay storing
+    - Migrate simulation execution
     - Migrate existing unit tests to still work

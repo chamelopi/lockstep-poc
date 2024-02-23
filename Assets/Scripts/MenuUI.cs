@@ -153,11 +153,13 @@ public class MenuUi : MonoBehaviour
     }
 
 
-    public void LoadReplay() {
+    public void LoadReplay()
+    {
         StartCoroutine(LoadReplayCoro());
     }
 
-    public IEnumerator LoadReplayCoro() {
+    public IEnumerator LoadReplayCoro()
+    {
         var dropdown = replayDropdown.GetComponent<TMP_Dropdown>();
         var replayName = dropdown.options[dropdown.value].text;
         Debug.Log("Loading replay " + replayName);
@@ -173,6 +175,7 @@ public class MenuUi : MonoBehaviour
         // Tell simulation about replay
         SimulationManager.sim!.LoadReplay(Path.Combine(ReplayPath, replayName));
         HideMenuUI();
+        SimulationManager.sim!.isPaused = false;
     }
 
     internal void GoToGame()
@@ -188,12 +191,20 @@ public class MenuUi : MonoBehaviour
             // TODO: Should we handle this in network manager instead of in the scene?
             networkManager?.AddCallback(PacketType.StartGame, _ =>
             {
-                // FIXME: We don't seem to have a player ID right now?
+                Debug.Log("Start game callback!");
                 networkManager.UpdateLocalState(ClientState.InGame);
-                HideMenuUI();
                 inGame = true;
+                SimulationManager.sim!.isPaused = false;
+                HideMenuUI();
                 networkManager.RemoveCallback(PacketType.StartGame);
             });
+        }
+        else
+        {
+            // Unpause immediately - either we are the server or we have no network manager
+            SimulationManager.sim!.isPaused = false;
+            networkManager!.UpdateLocalState(ClientState.InGame);
+            inGame = true;
         }
     }
 }
