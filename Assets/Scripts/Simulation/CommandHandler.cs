@@ -8,7 +8,7 @@ namespace Simulation
         private static readonly long PlayerSpeed = 10000;
 
 
-        public static void HandleCommand(SimulationState currentState, Command command)
+        public static void HandleCommand(Simulation sim, SimulationState currentState, Command command)
         {
             switch (command.CommandType)
             {
@@ -22,7 +22,7 @@ namespace Simulation
                     HandleMoveCommand(currentState, command);
                     break;
                 case CommandType.Spawn:
-                    HandleSpawnCommand(currentState, command);
+                    HandleSpawnCommand(sim, currentState, command);
                     break;
                 default:
                     Debug.LogError("CommandHandler: Unknown command type " + command.CommandType);
@@ -63,7 +63,7 @@ namespace Simulation
             }
         }
 
-        private static void HandleSpawnCommand(SimulationState currentState, Command command)
+        private static void HandleSpawnCommand(Simulation sim, SimulationState currentState, Command command)
         {
             var entity = new Entity()
             {
@@ -73,6 +73,7 @@ namespace Simulation
                 Moving = false,
             };
             currentState.SpawnEntity(entity, command.PlayerId);
+            sim.onEntitySpawn(entity);
         }
     }
 

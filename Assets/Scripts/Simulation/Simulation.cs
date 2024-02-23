@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,6 +35,8 @@ namespace Simulation
         public List<Command> allCommands;
         public List<Command> lastFrameActions;
         public bool isPaused;
+        internal EntityCallback? onEntitySpawn;
+        internal EntityCallback? onEntityDespawn;
 
         public Simulation(int turnSpeedMs, int playerCount)
         {
@@ -110,7 +114,7 @@ namespace Simulation
                 return;
             }
 
-            CommandHandler.HandleCommand(currentState, command);
+            CommandHandler.HandleCommand(this, currentState, command);
         }
 
         public SimulationState Interpolate(float msSinceStartOfTurn)
@@ -141,6 +145,26 @@ namespace Simulation
             }
 
             return interpolatedState;
+        }
+
+        public Entity Interpolate(int entityId) {
+            // 1 if on current turn, 0 if last turn
+            float alpha = GetTimeSinceLastStep() / (float)turnSpeedMs;
+            // To prevent teleporting - if we do have to clamp alpha here, the game will stutter however.
+            alpha = Math.Min(1.0f, Math.Max(0.0f, alpha));
+
+            // TODO: Handle case of entity despawning! The entity might not exist anymore in lastState!
+            var entity = lastState.Entities[entityId];
+
+            // Only interpolate if the entity existed during the last turn - otherwise just use the "new" entity!
+            if (!twoStepsAgoState.Entities.ContainsKey(entityId))
+            {
+                return entity;
+            }
+            else
+            {
+                return Entity.Interpolate(entity, twoStepsAgoState.Entities[entityId], alpha);
+            }
         }
 
 
@@ -245,7 +269,7 @@ namespace Simulation
             using (var stream = new StreamReader(filename))
             {
                 // TODO: This probably uses a lot of memory for large files
-                replay = JsonSerializer.Deserialize<Replay>(stream.ReadToEnd(), NetworkPacket.options);
+                replay = JsonSerializer.Deserialize<Replay>(stream.ReadToEnd(), NetworkPacket.options)!;
             }
             if (replay == null)
             {
@@ -262,6 +286,18 @@ namespace Simulation
             }
 
             Debug.Log("Successfully loaded from replay file " + filename);
+        }
+
+        public delegate void EntityCallback(Entity e);
+
+        public void HandleEntitySpawn(EntityCallback cb)
+        {
+            this.onEntitySpawn = cb;
+        }
+
+        public void HandleEntityDespawn(EntityCallback cb)
+        {
+            this.onEntityDespawn = cb;
         }
 
         internal void TogglePause()

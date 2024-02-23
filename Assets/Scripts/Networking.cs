@@ -25,6 +25,7 @@ public class Networking : MonoBehaviour
 
 
     private float mockLoadingTimeSeconds;
+    private bool inGame = false;
 
     public void Start()
     {
@@ -37,23 +38,26 @@ public class Networking : MonoBehaviour
         {
             networkManager.PollEvents();
 
-            // If all players are ready
-            if (networkManager.IsServer() && networkManager.GetClients().Where(cl => cl.State == ClientState.Ready).Count() == networkManager.GetClients().Count())
+            if (!inGame)
             {
-                Debug.Log("All players are ready - can start the game!");
-                startGameButton.SetActive(true);
+                // If all players are ready
+                if (networkManager.IsServer() && networkManager.GetClients().Where(cl => cl.State == ClientState.Ready).Count() == networkManager.GetClients().Count())
+                {
+                    Debug.Log("All players are ready - can start the game!");
+                    startGameButton.SetActive(true);
+                }
+
+                statusOutText.text = networkManager is SingleplayerNetworkManager ? "Singleplayer" : (networkManager.IsServer() ? "Server" : "Client");
+
+                if (networkManager.IsConnected())
+                {
+                    statusOutText.text += "\nConnected players: " + networkManager.GetClients().Count();
+                    statusOutText.text += "\nPlayerID: " + networkManager.GetLocalClient().PlayerId;
+                    statusOutText.text += "\nState: " + networkManager.GetLocalClient().State;
+                }
+
+                MockLoadMap();
             }
-
-            statusOutText.text = networkManager is SingleplayerNetworkManager ? "Singleplayer" : (networkManager.IsServer() ? "Server" : "Client");
-
-            if (networkManager.IsConnected())
-            {
-                statusOutText.text += "\nConnected players: " + networkManager.GetClients().Count();
-                statusOutText.text += "\nPlayerID: " + networkManager.GetLocalClient().PlayerId;
-                statusOutText.text += "\nState: " + networkManager.GetLocalClient().State;
-            }
-
-            MockLoadMap();
         }
 
         if (SimulationManager.sim != null)
@@ -86,6 +90,7 @@ public class Networking : MonoBehaviour
         };
         networkManager?.QueuePacket(startPacket);
         HideMenuUI();
+        
     }
 
     private void HideMenuUI()
@@ -154,6 +159,7 @@ public class Networking : MonoBehaviour
                 // FIXME: We don't seem to have a player ID right now?
                 networkManager.UpdateLocalState(ClientState.InGame);
                 HideMenuUI();
+                inGame = true;
                 networkManager.RemoveCallback(PacketType.StartGame);
             });
         }

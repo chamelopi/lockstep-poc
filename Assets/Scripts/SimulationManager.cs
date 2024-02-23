@@ -10,6 +10,8 @@ public class SimulationManager : MonoBehaviour
 {
     public static Simulation.Simulation? sim;
 
+    public GameObject entityPrefab;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -18,22 +20,32 @@ public class SimulationManager : MonoBehaviour
             Debug.Log("Creating simulation");
             // TODO: Hardcoded player count, take from lobby settings instead
             sim = new Simulation.Simulation(turnSpeedMs: 100, playerCount: 2);
+            sim.HandleEntitySpawn(OnEntitySpawn);
+            sim.HandleEntityDespawn(OnEntityDespawn);
 
             // TODO: Create from map
             for (int i = 1; i <= sim.playerCount; i++)
             {
-                sim.lastState.SpawnEntity(new Entity { X = 0, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false }, i);
-                sim.lastState.SpawnEntity(new Entity { X = 10000 * i, Y = 0, VelocityX = 0, VelocityY = 0, Moving = false }, i);
-                sim.lastState.SpawnEntity(new Entity { X = 10000 * 2 * i, Y = 10000, VelocityX = 0, VelocityY = 0, Moving = false }, i);
+                OnEntitySpawn(sim.lastState.SpawnEntity(new Entity { X = 10000 * (i+1), Y = 0, VelocityX = 0, VelocityY = 0, Moving = false }, i));
+                OnEntitySpawn(sim.lastState.SpawnEntity(new Entity { X = 10000 * (i+1), Y = 10000, VelocityX = 0, VelocityY = 0, Moving = false }, i));
+                OnEntitySpawn(sim.lastState.SpawnEntity(new Entity { X = 10000 * (i+1), Y = 20000, VelocityX = 0, VelocityY = 0, Moving = false }, i));
             }
             sim.currentState = new(sim.lastState);
             sim.twoStepsAgoState = new(sim.lastState);
         }
     }
 
-    // Update is called once per frame
-    void Update()
+    void OnEntitySpawn(Entity e)
     {
-        // TODO: Update simulation
+        Debug.Log($"Entity spawned! id={e.EntityId}");
+        var instance = Instantiate(entityPrefab);
+        instance.transform.position = new Vector3(FixedPointUtil.FromFixed(e.X), 1, FixedPointUtil.FromFixed(e.Y));
+        instance.GetComponent<EntityPositionSync>().EntityId = e.EntityId;
+        instance.GetComponent<MeshRenderer>().material.color = e.OwningPlayer == 1 ? Color.red : Color.blue;
+    }
+
+    void OnEntityDespawn(Entity e)
+    {
+        Debug.Log($"Entity killed! id={e.EntityId}");
     }
 }
