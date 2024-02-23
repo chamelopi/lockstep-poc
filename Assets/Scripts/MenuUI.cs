@@ -3,13 +3,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Server;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class Networking : MonoBehaviour
+// TODO: Move network manager singleton to a different MonoBehaviour & game object
+public class MenuUi : MonoBehaviour
 {
     public static INetworkManager? networkManager;
 
@@ -19,8 +22,10 @@ public class Networking : MonoBehaviour
     public GameObject connectUI;
     public GameObject uiContainer;
     public GameObject startGameButton;
+    public GameObject replayDropdown;
     public GameObject simulationManagerPrefab;
 
+    public string ReplayPath = Environment.GetEnvironmentVariable("USERPROFILE") + @"\Documents\ColoniaPrimaReplays";
     private TextMeshProUGUI statusOutText;
 
 
@@ -30,10 +35,14 @@ public class Networking : MonoBehaviour
     public void Start()
     {
         statusOutText = statusOutput.GetComponent<TextMeshProUGUI>();
+        var dropdown = replayDropdown.GetComponent<TMP_Dropdown>();
+        dropdown.ClearOptions();
+        dropdown.AddOptions(Directory.EnumerateFiles(ReplayPath, "*.json").Select(path => Path.GetFileName(path)).ToList());
     }
 
     public void Update()
     {
+        statusOutText.text = "";
         if (networkManager != null)
         {
             networkManager.PollEvents();
@@ -90,7 +99,7 @@ public class Networking : MonoBehaviour
         };
         networkManager?.QueuePacket(startPacket);
         HideMenuUI();
-        
+
     }
 
     private void HideMenuUI()
@@ -100,10 +109,11 @@ public class Networking : MonoBehaviour
         startGameButton.SetActive(false);
         // Hide menu background
         uiContainer.SetActive(false);
+        // Deactivate menu camera for now
+        GameObject.Find("MenuCamera").SetActive(false);
     }
 
 
-    // TODO: This should probably be a separate menu script
     public void HostGame()
     {
         ushort port;
@@ -142,6 +152,28 @@ public class Networking : MonoBehaviour
         }
     }
 
+
+    public void LoadReplay() {
+        StartCoroutine(LoadReplayCoro());
+    }
+
+    public IEnumerator LoadReplayCoro() {
+        var dropdown = replayDropdown.GetComponent<TMP_Dropdown>();
+        var replayName = dropdown.options[dropdown.value].text;
+        Debug.Log("Loading replay " + replayName);
+
+        networkManager = new SingleplayerNetworkManager();
+        GoToGame();
+        // Immediately go in game
+        networkManager.UpdateLocalState(ClientState.InGame);
+        inGame = true;
+
+        // Wait until simulation manager is intantiated
+        yield return new WaitForEndOfFrame();
+        // Tell simulation about replay
+        SimulationManager.sim!.LoadReplay(Path.Combine(ReplayPath, replayName));
+        HideMenuUI();
+    }
 
     internal void GoToGame()
     {

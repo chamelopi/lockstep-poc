@@ -4,7 +4,8 @@ namespace Simulation
     {
         public static long GetTicks()
         {
-            return (long)UnityEngine.Time.realtimeSinceStartup;
+            // Unity time is seconds!
+            return (long)(UnityEngine.Time.realtimeSinceStartup * 1000f);
         }
 
         public delegate void TimedCallback();

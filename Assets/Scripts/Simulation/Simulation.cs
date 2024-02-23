@@ -100,9 +100,10 @@ namespace Simulation
             }
 
             // Update state
-            foreach (var (id, entity) in this.currentState.Entities)
+            // FIXME: This creates a copy of all entity ids per simulation step!
+            foreach (var id in this.currentState.Entities.Keys.ToArray())
             {
-                this.currentState.Entities[id] = entity.Update();
+                this.currentState.Entities[id] = this.currentState.Entities[id].Update();
             }
         }
 
