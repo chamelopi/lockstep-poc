@@ -148,13 +148,14 @@ namespace Simulation
             return interpolatedState;
         }
 
-        public Entity Interpolate(int entityId) {
+        public Entity Interpolate(int entityId)
+        {
             // 1 if on current turn, 0 if last turn
             float alpha = GetTimeSinceLastStep() / (float)turnSpeedMs;
             // To prevent teleporting - if we do have to clamp alpha here, the game will stutter however.
             alpha = Math.Min(1.0f, Math.Max(0.0f, alpha));
 
-            // TODO: Handle case of entity despawning! The entity might not exist anymore in lastState!
+            // TODO: Handle case of entity (de)spawning properly! The entity might not exist anymore in lastState!
             var entity = lastState.Entities[entityId];
 
             // Only interpolate if the entity existed during the last turn - otherwise just use the "new" entity!

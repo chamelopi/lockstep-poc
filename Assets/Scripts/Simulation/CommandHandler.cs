@@ -72,8 +72,8 @@ namespace Simulation
                 Y = command.TargetY,
                 Moving = false,
             };
-            currentState.SpawnEntity(entity, command.PlayerId);
-            sim.onEntitySpawn(entity);
+            entity = currentState.SpawnEntity(entity, command.PlayerId);
+            sim?.onEntitySpawn(entity);
         }
     }
 

@@ -48,7 +48,6 @@ namespace Simulation
         public Entity SpawnEntity(Entity entity, int playerId)
         {
             var id = GetNextId(playerId);
-            Debug.Log("Spawned Entity!");
             entity.EntityId = id;
             entity.OwningPlayer = playerId;
             this.Entities.Add(id, entity);

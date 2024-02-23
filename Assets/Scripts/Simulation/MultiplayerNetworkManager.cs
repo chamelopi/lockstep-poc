@@ -296,7 +296,7 @@ namespace Server
         {
             if (!remotePeers.ContainsKey(myPlayerId))
             {
-                Debug.LogError($"Could not update local state to {state}! No state for myself yet!");
+                Debug.LogError($"NM: Could not update local state to {state}! No state for myself yet!");
                 return;
             }
 

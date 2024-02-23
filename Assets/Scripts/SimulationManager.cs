@@ -20,8 +20,8 @@ public class SimulationManager : MonoBehaviour
             Debug.Log("Creating simulation");
             // TODO: Hardcoded player count, take from lobby settings instead
             sim = new Simulation.Simulation(turnSpeedMs: 100, playerCount: 2);
-            sim.HandleEntitySpawn(OnEntitySpawn);
-            sim.HandleEntityDespawn(OnEntityDespawn);
+            sim.HandleEntitySpawn(e => OnEntitySpawn(e));
+            sim.HandleEntityDespawn(e => OnEntityDespawn(e));
 
             // TODO: Create from map
             for (int i = 1; i <= sim.playerCount; i++)
@@ -39,6 +39,7 @@ public class SimulationManager : MonoBehaviour
     {
         Debug.Log($"Entity spawned! id={e.EntityId}");
         var instance = Instantiate(entityPrefab);
+        instance.name = "Entity" + e.EntityId;
         instance.transform.position = new Vector3(FixedPointUtil.FromFixed(e.X), 1, FixedPointUtil.FromFixed(e.Y));
         instance.GetComponent<EntityPositionSync>().EntityId = e.EntityId;
         instance.GetComponent<MeshRenderer>().material.color = e.OwningPlayer == 1 ? Color.red : Color.blue;

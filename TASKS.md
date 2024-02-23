@@ -10,6 +10,7 @@
 5. Implement map (just a list of entities, loaded on startup)
 6. Store initial state of simulation in replay
    - Fix CheckFullDeterminism by replicating this initial state as basis for the re-simulation
+7. Add a "replay end" command at the turn the replays are saved at & terminate the simulation when handled
 
 ## Networking features
 7. send our own state as heartbeat every few seconds?
