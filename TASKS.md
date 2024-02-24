@@ -27,6 +27,8 @@
 ## Unity
 14. Port to Unity/Integrate into Unity    
     - Migrate input handling
+      - Box select
+        - bounds check does not work yet
       - Select
       - Move
     - Migrate replay storing

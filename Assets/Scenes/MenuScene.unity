@@ -607,8 +607,8 @@ MonoBehaviour:
     m_Bits: 0
   panSpeed: 0.1
   minPanDistance: 0.25
-  moveSpeed: 0.75
-  zoomSpeed: 1
+  moveSpeed: 0.5
+  zoomSpeed: 3
   invertZoom: 0
   followStep: 0.0001
 --- !u!114 &174581336

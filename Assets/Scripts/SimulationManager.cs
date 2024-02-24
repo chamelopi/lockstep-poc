@@ -13,7 +13,6 @@ public class SimulationManager : MonoBehaviour
     public static Simulation.Simulation? sim;
 
     public GameObject entityPrefab;
-    public GameObject groundPlane;
 
     // Start is called before the first frame update
     void Start()
@@ -48,7 +47,6 @@ public class SimulationManager : MonoBehaviour
             });
         }
 
-        groundPlane = GameObject.Find("GroundPlane");
     }
 
     void OnEntitySpawn(Entity e)
@@ -57,7 +55,11 @@ public class SimulationManager : MonoBehaviour
         instance.name = "Entity" + e.EntityId;
         instance.transform.position = new Vector3(FixedPointUtil.FromFixed(e.X), 1, FixedPointUtil.FromFixed(e.Y));
         instance.GetComponent<EntityPositionSync>().EntityId = e.EntityId;
-        instance.GetComponent<MeshRenderer>().material.color = e.OwningPlayer == 1 ? Color.red : Color.blue;
+        instance.GetComponent<EntitySelectionSync>().EntityId = e.EntityId;
+        foreach (var meshRenderer in instance.GetComponents<MeshRenderer>())
+        {
+            meshRenderer.material.color = e.OwningPlayer == 1 ? Color.red : Color.blue;
+        }
     }
 
     void OnEntityDespawn(Entity e)
@@ -67,32 +69,6 @@ public class SimulationManager : MonoBehaviour
 
     void Update()
     {
-        // Spawn entity on key press
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (groundPlane.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitPoint, 500f))
-            {
-                var cmd = new Command()
-                {
-                    CommandType = CommandType.Spawn,
-                    PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
-                    TargetX = FixedPointUtil.ToFixed(hitPoint.point.x),
-                    TargetY = FixedPointUtil.ToFixed(hitPoint.point.z),
-                    TargetTurn = sim!.currentTurn + 2,
-                };
-                sim!.AddCommand(cmd);
-                MenuUi.networkManager.QueuePacket(new CommandPacket()
-                {
-                    Command = cmd,
-                    PkgType = PacketType.Command,
-                    PlayerId = MenuUi.networkManager.GetLocalPlayer(),
-                });
-            }
-        }
-        // TODO: Handle selection (box select/click select)
-        // TODO: Handle move command (right click)
-
         RunSimulation();
     }
 

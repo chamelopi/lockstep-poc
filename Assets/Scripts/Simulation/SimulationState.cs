@@ -12,7 +12,7 @@ namespace Simulation
         public int MaxEntitiesPerPlayer { get; }
 
         public Dictionary<int, Entity> Entities;
-        public List<int> SelectedEntities;
+        public HashSet<int> SelectedEntities;
 
         public SimulationState(int numberOfPlayers)
         {

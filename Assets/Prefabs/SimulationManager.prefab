@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5267767250872506643}
   - component: {fileID: 8461967414910906291}
+  - component: {fileID: 7548382500858068263}
   m_Layer: 0
   m_Name: SimulationManager
   m_TagString: Untagged
@@ -46,3 +47,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entityPrefab: {fileID: 5430708051727969093, guid: 5cd08ac8c291ea443a525b65e1942306,
     type: 3}
+  groundPlane: {fileID: 0}
+--- !u!114 &7548382500858068263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2069780148835525610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c95a195b46b6f43a50dd4788b53a6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

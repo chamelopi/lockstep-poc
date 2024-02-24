@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Simulation
@@ -24,10 +25,31 @@ namespace Simulation
                 case CommandType.Spawn:
                     HandleSpawnCommand(sim, currentState, command);
                     break;
+                case CommandType.BoxSelect:
+                    HandleBoxSelectCommand(currentState, command);
+                    break;
                 default:
                     Debug.LogError("CommandHandler: Unknown command type " + command.CommandType);
                     break;
             }
+        }
+
+        private static void HandleBoxSelectCommand(SimulationState currentState, Command command)
+        {
+            currentState.SelectedEntities.Clear();
+
+            int count = 0;
+            foreach (var (id, entity) in currentState.Entities)
+            {
+                if (entity.OwningPlayer == MenuUi.networkManager.GetLocalPlayer())
+                {
+                    // FIXME: Bounds are not correct
+                    if (command.TargetX >= entity.X && command.TargetY >= entity.Y && command.BoxX <= entity.X && command.BoxY <= entity.X) {
+                        currentState.SelectedEntities.Add(id);
+                    }
+                }
+            }
+            Debug.Log($"Selected {currentState.SelectedEntities.Count}/{count} entities!");
         }
 
         private static void HandleSelectCommand(SimulationState currentState, Command command)
