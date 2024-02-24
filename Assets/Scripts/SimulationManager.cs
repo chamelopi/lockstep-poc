@@ -5,19 +5,20 @@ using System.Collections.Generic;
 using System.Linq;
 using Simulation;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SimulationManager : MonoBehaviour
 {
     public static Simulation.Simulation? sim;
 
     public GameObject entityPrefab;
+    public GameObject groundPlane;
 
     // Start is called before the first frame update
     void Start()
     {
         if (sim == null)
         {
-            Debug.Log("Creating simulation");
             // TODO: Hardcoded player count, take from lobby settings instead
             sim = new Simulation.Simulation(turnSpeedMs: 100, playerCount: 2);
             sim.HandleEntitySpawn(e => OnEntitySpawn(e));
@@ -34,6 +35,9 @@ public class SimulationManager : MonoBehaviour
             sim.twoStepsAgoState = new(sim.lastState);
             sim.isPaused = true;
         }
+
+        groundPlane = GameObject.Find("GroundPlane");
+        Debug.Log("Ground plane found? " + (groundPlane != null));
     }
 
     void OnEntitySpawn(Entity e)
@@ -56,9 +60,11 @@ public class SimulationManager : MonoBehaviour
         // Spawn entity on key press
         if (Input.GetKeyDown(KeyCode.E))
         {
+            Debug.Log("E pressed!");
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (GameObject.Find("GroundPlane").GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitPoint, 80f))
+            if (groundPlane.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitPoint, 80f))
             {
+                Debug.Log("Hit ground!");
                 sim!.AddCommand(new Command()
                 {
                     CommandType = CommandType.Spawn,

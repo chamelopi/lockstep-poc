@@ -47,23 +47,22 @@ public class MenuUi : MonoBehaviour
         {
             networkManager.PollEvents();
 
+            if (networkManager.IsConnected())
+            {
+                statusOutText.text = networkManager is SingleplayerNetworkManager ? "Singleplayer" : (networkManager.IsServer() ? "Server" : "Client");
+                statusOutText.text += "\nConnected players: " + networkManager.GetClients().Count();
+                statusOutText.text += "\nPlayerID: " + networkManager.GetLocalClient().PlayerId;
+                statusOutText.text += "\nState: " + networkManager.GetLocalClient().State;
+            }
+            else
+            {
+                statusOutText.text = "Not connected to network!";
+            }
+
             if (!inGame)
             {
-                // If all players are ready
-                if (networkManager.IsServer() && networkManager.GetClients().Where(cl => cl.State == ClientState.Ready).Count() == networkManager.GetClients().Count())
-                {
-                    Debug.Log("All players are ready - can start the game!");
-                    startGameButton.SetActive(true);
-                }
-
-                statusOutText.text = networkManager is SingleplayerNetworkManager ? "Singleplayer" : (networkManager.IsServer() ? "Server" : "Client");
-
-                if (networkManager.IsConnected())
-                {
-                    statusOutText.text += "\nConnected players: " + networkManager.GetClients().Count();
-                    statusOutText.text += "\nPlayerID: " + networkManager.GetLocalClient().PlayerId;
-                    statusOutText.text += "\nState: " + networkManager.GetLocalClient().State;
-                }
+                // If all players are ready, enable the start button
+                startGameButton.SetActive(networkManager.IsServer() && networkManager.GetClients().Where(cl => cl.State == ClientState.Ready).Count() == networkManager.GetClients().Count());
 
                 MockLoadMap();
             }
@@ -97,9 +96,13 @@ public class MenuUi : MonoBehaviour
         {
             PkgType = PacketType.StartGame,
         };
-        networkManager?.QueuePacket(startPacket);
+        networkManager!.QueuePacket(startPacket);
         HideMenuUI();
 
+        // Start immediately for server!
+        networkManager!.UpdateLocalState(ClientState.InGame);
+        inGame = true;
+        SimulationManager.sim!.isPaused = false;
     }
 
     private void HideMenuUI()
@@ -116,15 +119,14 @@ public class MenuUi : MonoBehaviour
 
     public void HostGame()
     {
-        ushort port;
         string portStr = portInput.GetComponent<TMP_InputField>().text;
 
-        if (ushort.TryParse(portStr.Trim(), out port))
+        if (ushort.TryParse(portStr.Trim(), out ushort port))
         {
             networkManager = MultiplayerNetworkManager.NewServer(port);
             Debug.Log("Server created successfully!");
 
-            GoToGame();
+            LoadGameScene();
         }
         else
         {
@@ -135,15 +137,14 @@ public class MenuUi : MonoBehaviour
 
     public void JoinGame()
     {
-        ushort port;
         string hostname = hostInput.GetComponent<TMP_InputField>().text.Trim();
 
-        if (ushort.TryParse(portInput.GetComponent<TMP_InputField>().text.Trim(), out port))
+        if (ushort.TryParse(portInput.GetComponent<TMP_InputField>().text.Trim(), out ushort port))
         {
             networkManager = MultiplayerNetworkManager.NewClient(hostname, port);
             Debug.Log("Game joined successfully!");
 
-            GoToGame();
+            LoadGameScene();
         }
         else
         {
@@ -165,7 +166,7 @@ public class MenuUi : MonoBehaviour
         Debug.Log("Loading replay " + replayName);
 
         networkManager = new SingleplayerNetworkManager();
-        GoToGame();
+        LoadGameScene();
         // Immediately go in game
         networkManager.UpdateLocalState(ClientState.InGame);
         inGame = true;
@@ -178,7 +179,7 @@ public class MenuUi : MonoBehaviour
         SimulationManager.sim!.isPaused = false;
     }
 
-    internal void GoToGame()
+    internal void LoadGameScene()
     {
         connectUI.SetActive(false);
         Instantiate(simulationManagerPrefab);
@@ -198,13 +199,6 @@ public class MenuUi : MonoBehaviour
                 HideMenuUI();
                 networkManager.RemoveCallback(PacketType.StartGame);
             });
-        }
-        else
-        {
-            // Unpause immediately - either we are the server or we have no network manager
-            SimulationManager.sim!.isPaused = false;
-            networkManager!.UpdateLocalState(ClientState.InGame);
-            inGame = true;
         }
     }
 }

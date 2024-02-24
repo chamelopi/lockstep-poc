@@ -29,14 +29,7 @@
     - Migrate input handling
       - We currently have the following problems:
         - input not recognized (?) nothing is spawned
-          -> cannot be because sim is not running, it does not work in single player either
-        - server remains in "ready" state on game start
-          -> ???
-        - server can click "start" before lobby is full / even if a new client joins and is "waiting"
-          -> need to hide button again if a player joins 
-          -> need to set a max number of players in UI before creating game & check for that!
-        - game remains paused on start
-          -> this might be because we don't wait for the next frame when spawning the simulation manager!
+          -> ground plane or mesh collider is not found?
     - Migrate replay storing
     - Migrate simulation execution
     - Migrate existing unit tests to still work
