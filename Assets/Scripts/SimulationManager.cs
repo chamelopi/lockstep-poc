@@ -35,6 +35,17 @@ public class SimulationManager : MonoBehaviour
             sim.currentState = new(sim.lastState);
             sim.twoStepsAgoState = new(sim.lastState);
             sim.isPaused = true;
+
+            MenuUi.networkManager!.AddCallback(PacketType.Command, packet =>
+            {
+                var commandPacket = (CommandPacket)packet;
+                if (commandPacket.Command.PlayerId != commandPacket.PlayerId)
+                {
+                    Debug.LogError($"Player {commandPacket.PlayerId} cannot send command for player {commandPacket.Command.PlayerId}");
+                    return;
+                }
+                sim.AddCommand(commandPacket.Command);
+            });
         }
 
         groundPlane = GameObject.Find("GroundPlane");
@@ -71,7 +82,8 @@ public class SimulationManager : MonoBehaviour
                     TargetTurn = sim!.currentTurn + 2,
                 };
                 sim!.AddCommand(cmd);
-                MenuUi.networkManager.QueuePacket(new CommandPacket() {
+                MenuUi.networkManager.QueuePacket(new CommandPacket()
+                {
                     Command = cmd,
                     PkgType = PacketType.Command,
                     PlayerId = MenuUi.networkManager.GetLocalPlayer(),
