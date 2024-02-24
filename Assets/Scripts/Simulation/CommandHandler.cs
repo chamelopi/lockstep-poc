@@ -73,7 +73,7 @@ namespace Simulation
                 Moving = false,
             };
             entity = currentState.SpawnEntity(entity, command.PlayerId);
-            sim?.onEntitySpawn(entity);
+            sim!.onEntitySpawn?.Invoke(entity);
         }
     }
 

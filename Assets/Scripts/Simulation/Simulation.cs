@@ -282,10 +282,6 @@ namespace Simulation
             // FIXME: Store initial entities in replay and restore them here!
             //this.Reset();
             this.AddCommands(replay.Commands);
-            for (int i = 0; i < commandQueue.Count; i++)
-            {
-                Debug.Log(commandQueue.UnorderedItems.ElementAt(i).ToString());
-            }
 
             Debug.Log("Successfully loaded from replay file " + filename);
         }

@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Server;
 using Simulation;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -37,12 +38,10 @@ public class SimulationManager : MonoBehaviour
         }
 
         groundPlane = GameObject.Find("GroundPlane");
-        Debug.Log("Ground plane found? " + (groundPlane != null));
     }
 
     void OnEntitySpawn(Entity e)
     {
-        Debug.Log($"Entity spawned! id={e.EntityId}");
         var instance = Instantiate(entityPrefab);
         instance.name = "Entity" + e.EntityId;
         instance.transform.position = new Vector3(FixedPointUtil.FromFixed(e.X), 1, FixedPointUtil.FromFixed(e.Y));
@@ -60,18 +59,22 @@ public class SimulationManager : MonoBehaviour
         // Spawn entity on key press
         if (Input.GetKeyDown(KeyCode.E))
         {
-            Debug.Log("E pressed!");
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (groundPlane.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitPoint, 80f))
+            if (groundPlane.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitPoint, 500f))
             {
-                Debug.Log("Hit ground!");
-                sim!.AddCommand(new Command()
+                var cmd = new Command()
                 {
                     CommandType = CommandType.Spawn,
                     PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
                     TargetX = FixedPointUtil.ToFixed(hitPoint.point.x),
                     TargetY = FixedPointUtil.ToFixed(hitPoint.point.z),
-                    TargetTurn = sim.currentTurn + 2,
+                    TargetTurn = sim!.currentTurn + 2,
+                };
+                sim!.AddCommand(cmd);
+                MenuUi.networkManager.QueuePacket(new CommandPacket() {
+                    Command = cmd,
+                    PkgType = PacketType.Command,
+                    PlayerId = MenuUi.networkManager.GetLocalPlayer(),
                 });
             }
         }
@@ -108,7 +111,7 @@ public class SimulationManager : MonoBehaviour
 
                 sim.Step();
 
-                // We might disable this for a release build
+                // We might disable this for a release build for performance reasons
                 sim.CheckDeterminism();
             }
         }

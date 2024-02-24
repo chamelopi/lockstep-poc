@@ -24,6 +24,7 @@ public class MenuUi : MonoBehaviour
     public GameObject startGameButton;
     public GameObject replayDropdown;
     public GameObject simulationManagerPrefab;
+    public GameObject groundPlane;
 
     public string ReplayPath = Environment.GetEnvironmentVariable("USERPROFILE") + @"\Documents\ColoniaPrimaReplays";
     private TextMeshProUGUI statusOutText;
@@ -112,8 +113,8 @@ public class MenuUi : MonoBehaviour
         startGameButton.SetActive(false);
         // Hide menu background
         uiContainer.SetActive(false);
-        // Deactivate menu camera for now
-        GameObject.Find("MenuCamera").SetActive(false);
+        // Activate RTS camera controls
+        GameObject.Find("InGameCamera").GetComponent<CameraController>().enabled = true;
     }
 
 
@@ -182,8 +183,8 @@ public class MenuUi : MonoBehaviour
     internal void LoadGameScene()
     {
         connectUI.SetActive(false);
+        groundPlane.SetActive(true);
         Instantiate(simulationManagerPrefab);
-        SceneManager.LoadScene("GameScene", LoadSceneMode.Additive);
 
         mockLoadingTimeSeconds = 5;
 

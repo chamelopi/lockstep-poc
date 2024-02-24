@@ -27,9 +27,8 @@
 ## Unity
 14. Port to Unity/Integrate into Unity    
     - Migrate input handling
-      - We currently have the following problems:
-        - input not recognized (?) nothing is spawned
-          -> ground plane or mesh collider is not found?
+      - Select
+      - Move
     - Migrate replay storing
     - Migrate simulation execution
     - Migrate existing unit tests to still work
