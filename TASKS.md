@@ -26,7 +26,6 @@
 
 ## Unity
 14. Port to Unity/Integrate into Unity
-    - Migrate input handling
     - Migrate replay storing
     - Migrate simulation execution
     - Migrate existing unit tests to still work

@@ -24,6 +24,8 @@ public class MenuUi : MonoBehaviour
     public GameObject uiContainer;
     public GameObject startGameButton;
     public GameObject replayDropdown;
+    public GameObject saveReplayButton;
+    public GameObject waitingMessage;
     public GameObject simulationManagerPrefab;
     public GameObject groundPlane;
 
@@ -63,8 +65,13 @@ public class MenuUi : MonoBehaviour
 
             if (!inGame)
             {
+                var areAllPlayersReady = networkManager.GetClients().Where(cl => cl.State == ClientState.Ready).Count() == networkManager.GetClients().Count();
+
                 // If all players are ready, enable the start button
-                startGameButton.SetActive(networkManager.IsServer() && networkManager.GetClients().Where(cl => cl.State == ClientState.Ready).Count() == networkManager.GetClients().Count());
+                startGameButton.SetActive(networkManager.IsServer() && areAllPlayersReady);
+
+                // Show waiting message if not everyone is ready
+                waitingMessage.SetActive(!areAllPlayersReady);
 
                 MockLoadMap();
             }
@@ -117,6 +124,8 @@ public class MenuUi : MonoBehaviour
         uiContainer.SetActive(false);
         // Activate RTS camera controls
         GameObject.Find("InGameCamera").GetComponent<CameraController>().enabled = true;
+        // Show replay save button
+        saveReplayButton.SetActive(true);
     }
 
 
@@ -154,6 +163,11 @@ public class MenuUi : MonoBehaviour
             Debug.LogError("Could not parse port!");
             statusOutText.text = "Invalid Port!";
         }
+    }
+
+    public void SaveReplay()
+    {
+        SimulationManager.sim!.SaveReplay(Path.Combine(ReplayPath, "replay-" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".json"));
     }
 
 
