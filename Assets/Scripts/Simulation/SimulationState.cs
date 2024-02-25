@@ -12,19 +12,20 @@ namespace Simulation
         public int MaxEntitiesPerPlayer { get; }
 
         public Dictionary<int, Entity> Entities;
-        // FIXME: Do we need to track this for each player separately?
-        public HashSet<int> SelectedEntities;
+        // Selected entities per player!
+        public Dictionary<int, HashSet<int>> SelectedEntities;
 
         public SimulationState(int numberOfPlayers)
         {
             MaxEntitiesPerPlayer = (int)(Mathf.Pow(2, 31) / numberOfPlayers);
             Entities = new();
             EntityIdCounters = new();
+            SelectedEntities = new();
             for (int i = 1; i <= numberOfPlayers; i++)
             {
                 EntityIdCounters[i] = (i - 1) * MaxEntitiesPerPlayer;
+                SelectedEntities[i] = new();
             }
-            SelectedEntities = new();
         }
 
         public SimulationState(SimulationState copy)

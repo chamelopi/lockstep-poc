@@ -6,6 +6,7 @@ public class EntitySelectionSync : MonoBehaviour
 {
     // Filled by simulation manager when instantiating prefab
     public int EntityId;
+    public int PlayerId;
     public bool spawned = false;
     public GameObject selectionIndicator;
 
@@ -17,9 +18,8 @@ public class EntitySelectionSync : MonoBehaviour
         }
         if (spawned)
         {
-            var interpolatedEntity = SimulationManager.sim!.Interpolate(EntityId);
             // Set visibility of indicator based on selection state
-            selectionIndicator.SetActive(SimulationManager.sim!.currentState.SelectedEntities.Contains(EntityId));
+            selectionIndicator.SetActive(SimulationManager.sim!.currentState.SelectedEntities[PlayerId].Contains(EntityId));
         }
     }
 }

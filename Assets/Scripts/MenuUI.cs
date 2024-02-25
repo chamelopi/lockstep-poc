@@ -8,6 +8,7 @@ using System.Linq;
 using Server;
 using TMPro;
 using Unity.VisualScripting;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -75,7 +76,7 @@ public class MenuUi : MonoBehaviour
             statusOutText.text += "\nSimulation paused? " + SimulationManager.sim.isPaused;
             statusOutText.text += "\nSimulation entity count: " + SimulationManager.sim.currentState.Entities.Count;
             statusOutText.text += "\nSimulation turn speed (ms): " + SimulationManager.sim.turnSpeedMs;
-            statusOutText.text += "\nNumber of selected entities: " + SimulationManager.sim.currentState.SelectedEntities.Count;
+            statusOutText.text += "\nNumber of selected entities: " + SimulationManager.sim.currentState.SelectedEntities.Select(e => e.Value.Count).Sum();
         }
     }
 

@@ -55,7 +55,9 @@ public class SimulationManager : MonoBehaviour
         instance.name = "Entity" + e.EntityId;
         instance.transform.position = new Vector3(FixedPointUtil.FromFixed(e.X), 1, FixedPointUtil.FromFixed(e.Y));
         instance.GetComponent<EntityPositionSync>().EntityId = e.EntityId;
-        instance.GetComponent<EntitySelectionSync>().EntityId = e.EntityId;
+        var selSync = instance.GetComponent<EntitySelectionSync>();
+        selSync.EntityId = e.EntityId;
+        selSync.PlayerId = e.OwningPlayer;
         foreach (var meshRenderer in instance.GetComponents<MeshRenderer>())
         {
             meshRenderer.material.color = e.OwningPlayer == 1 ? Color.red : Color.blue;

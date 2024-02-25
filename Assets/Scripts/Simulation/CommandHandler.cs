@@ -18,7 +18,7 @@ namespace Simulation
                     HandleSelectCommand(currentState, command);
                     break;
                 case CommandType.Deselect:
-                    HandleDeselectCommand(currentState);
+                    HandleDeselectCommand(currentState, command);
                     break;
                 case CommandType.Move:
                     HandleMoveCommand(currentState, command);
@@ -37,7 +37,7 @@ namespace Simulation
 
         private static void HandleBoxSelectCommand(SimulationState currentState, Command command)
         {
-            currentState.SelectedEntities.Clear();
+            currentState.SelectedEntities[command.PlayerId].Clear();
 
             foreach (var (id, entity) in currentState.Entities)
             {
@@ -51,7 +51,7 @@ namespace Simulation
                     var entityPosInViewSpace = Camera.main.WorldToViewportPoint(new Vector3(FixedPointUtil.FromFixed(entity.X), FixedPointUtil.FromFixed(entity.Y), 0f));
                     if (bounds.Contains(entityPosInViewSpace))
                     {
-                        currentState.SelectedEntities.Add(id);
+                        currentState.SelectedEntities[command.PlayerId].Add(id);
                     }
                 }
             }
@@ -59,20 +59,21 @@ namespace Simulation
 
         private static void HandleSelectCommand(SimulationState currentState, Command command)
         {
-            currentState.SelectedEntities.Clear();
-            currentState.SelectedEntities.Add(command.EntityId);
+            currentState.SelectedEntities[command.PlayerId].Clear();
+            currentState.SelectedEntities[command.PlayerId].Add(command.EntityId);
         }
 
-        private static void HandleDeselectCommand(SimulationState currentState)
+        private static void HandleDeselectCommand(SimulationState currentState, Command command)
         {
-            currentState.SelectedEntities.Clear();
+            currentState.SelectedEntities[command.PlayerId].Clear();
         }
 
         private static void HandleMoveCommand(SimulationState currentState, Command command)
         {
-            if (currentState.SelectedEntities.Count == 1)
+            if (currentState.SelectedEntities[command.PlayerId].Count == 1)
             {
-                var affectedEntity = currentState.Entities[currentState.SelectedEntities.First()];
+                var id = currentState.SelectedEntities[command.PlayerId].First();
+                var affectedEntity = currentState.Entities[id];
 
                 var dx = command.TargetX - affectedEntity.X;
                 var dy = command.TargetY - affectedEntity.Y;
@@ -86,14 +87,15 @@ namespace Simulation
                 affectedEntity.VelocityY = vy;
                 affectedEntity.Moving = true;
 
-                currentState.Entities[currentState.SelectedEntities.First()] = affectedEntity;
+                currentState.Entities[id] = affectedEntity;
             }
-            else
+            else if (currentState.SelectedEntities[command.PlayerId].Count > 1)
             {
-                long centerX = (long)currentState.SelectedEntities.Select(e => currentState.Entities[e].X).Average();
-                long centerY = (long)currentState.SelectedEntities.Select(e => currentState.Entities[e].Y).Average();
+                long centerX = (long)currentState.SelectedEntities[command.PlayerId].Select(e => currentState.Entities[e].X).Average();
+                long centerY = (long)currentState.SelectedEntities[command.PlayerId].Select(e => currentState.Entities[e].Y).Average();
 
-                foreach (var selected in currentState.SelectedEntities)
+                Debug.Log("MoveCommand: player id is " + command.PlayerId);
+                foreach (var selected in currentState.SelectedEntities[command.PlayerId])
                 {
                     var affectedEntity = currentState.Entities[selected];
 
@@ -102,8 +104,8 @@ namespace Simulation
                     var offsetX = centerX - affectedEntity.X;
                     var offsetY = centerY - affectedEntity.Y;
 
-                    var targetX = command.TargetX + offsetX;
-                    var targetY = command.TargetY + offsetY;
+                    var targetX = command.TargetX - offsetX;
+                    var targetY = command.TargetY - offsetY;
 
                     var dx = targetX - affectedEntity.X;
                     var dy = targetY - affectedEntity.Y;

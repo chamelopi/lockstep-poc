@@ -58,7 +58,8 @@ public class InputHandler : MonoBehaviour
             }
         }
 
-        if (Input.GetMouseButtonUp(1)) {
+        if (Input.GetMouseButtonUp(1))
+        {
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (groundPlane.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitPoint, 500f))
             {
@@ -98,7 +99,6 @@ public class InputHandler : MonoBehaviour
                 {
                     CommandType = CommandType.BoxSelect,
                     PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
-                    // FIXME: Might need all three coordinates
                     TargetX = FixedPointUtil.ToFixed(bounds.center.x),
                     TargetY = FixedPointUtil.ToFixed(bounds.center.y),
                     TargetZ = FixedPointUtil.ToFixed(bounds.center.z),
@@ -109,7 +109,6 @@ public class InputHandler : MonoBehaviour
                 AddCommand(cmd);
             }
         }
-
     }
 
     // TODO: Handle selection (box select/click select)
