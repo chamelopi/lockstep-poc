@@ -5,7 +5,6 @@
 2. On pause, send a packet to everyone to let them know about the pause
 
 ## Simulation features
-3. Implement box select command
 4. Implement checksum calculation for Simulation State (e.g. CRC or just a hash sum)
 5. Implement map (just a list of entities, loaded on startup)
 6. Store initial state of simulation in replay
@@ -26,7 +25,7 @@
 
 ## Unity
 14. Port to Unity/Integrate into Unity
-    - Migrate replay storing
-    - Migrate simulation execution
+    - Pause simulation
+    - Simulation speed adjustment (should be synced, too!)
     - Migrate existing unit tests to still work
       - Can we do this without relying on *unity* unit tests?
