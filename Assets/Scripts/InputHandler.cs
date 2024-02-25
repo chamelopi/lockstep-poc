@@ -70,21 +70,78 @@ public class InputHandler : MonoBehaviour
 
             Debug.Log("selection bounds: " + bounds);
 
-            var cmd = new Command()
+            // Left click select vs. box select
+            if (Vector3.Distance(selectionBeginPos, Input.mousePosition) < 1.0f)
             {
-                CommandType = CommandType.BoxSelect,
-                PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
-                // FIXME: Might need all three coordinates
-                TargetX = FixedPointUtil.ToFixed(bounds.center.x),
-                TargetY = FixedPointUtil.ToFixed(bounds.center.y),
-                BoxX = FixedPointUtil.ToFixed(bounds.size.x),
-                BoxY = FixedPointUtil.ToFixed(bounds.size.y),
-            };
-            AddCommand(cmd);
+                var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                if (groundPlane.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitPoint, 500f))
+                {
+                    HandleLeftClickSelection(hitPoint.point);
+                }
+            }
+            else
+            {
+                var cmd = new Command()
+                {
+                    CommandType = CommandType.BoxSelect,
+                    PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
+                    // FIXME: Might need all three coordinates
+                    TargetX = FixedPointUtil.ToFixed(bounds.center.x),
+                    TargetY = FixedPointUtil.ToFixed(bounds.center.y),
+                    BoxX = FixedPointUtil.ToFixed(bounds.size.x),
+                    BoxY = FixedPointUtil.ToFixed(bounds.size.y),
+                };
+                AddCommand(cmd);
+            }
         }
 
-        // TODO: Handle selection (box select/click select)
-        // TODO: Handle move command (right click)
+    }
+
+    // TODO: Handle selection (box select/click select)
+    // TODO: Handle move command (right click)
+
+    void HandleLeftClickSelection(Vector3 hitPoint)
+    {
+        // Check for entities in the close proximity
+        bool hit = false;
+        foreach (var entity in sim.currentState.Entities.Values)
+        {
+            // Guard against selecting other player's entities.
+            if (entity.OwningPlayer != MenuUi.networkManager!.GetLocalPlayer())
+            {
+                continue;
+            }
+
+            var dist = FixedPointUtil.Distance(entity.X, entity.Y, hitPoint.x, hitPoint.z);
+            if (dist < FixedPointUtil.One * 2)
+            {
+                var cmd = new Command
+                {
+                    EntityId = entity.EntityId,
+                    PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
+                    CommandType = CommandType.Select,
+                };
+                AddCommand(cmd);
+                hit = true;
+
+                Debug.Log($"New command: selected entity {entity.EntityId}");
+                // Select only one entity this way
+                break;
+            }
+        }
+
+        // If we hit nothing, deselect
+        if (!hit)
+        {
+            var cmd = new Command
+            {
+                PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
+                CommandType = CommandType.Deselect,
+            };
+            AddCommand(cmd);
+
+            Debug.Log($"New command: deselected everything");
+        }
     }
 
     void OnGUI()
