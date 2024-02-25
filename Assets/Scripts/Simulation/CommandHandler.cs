@@ -41,7 +41,7 @@ namespace Simulation
 
             foreach (var (id, entity) in currentState.Entities)
             {
-                if (entity.OwningPlayer == MenuUi.networkManager.GetLocalPlayer())
+                if (entity.OwningPlayer == command.PlayerId)
                 {
                     // We do the check in view space because that is easier since we don't have to consider the perspective projection.
                     var pos = new Vector3(FixedPointUtil.FromFixed(command.TargetX), FixedPointUtil.FromFixed(command.TargetY), FixedPointUtil.FromFixed(command.TargetZ));
@@ -94,7 +94,6 @@ namespace Simulation
                 long centerX = (long)currentState.SelectedEntities[command.PlayerId].Select(e => currentState.Entities[e].X).Average();
                 long centerY = (long)currentState.SelectedEntities[command.PlayerId].Select(e => currentState.Entities[e].Y).Average();
 
-                Debug.Log("MoveCommand: player id is " + command.PlayerId);
                 foreach (var selected in currentState.SelectedEntities[command.PlayerId])
                 {
                     var affectedEntity = currentState.Entities[selected];

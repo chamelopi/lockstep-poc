@@ -27,7 +27,6 @@
 ## Unity
 14. Port to Unity/Integrate into Unity
     - Migrate input handling
-      - selection for box select is still off
     - Migrate replay storing
     - Migrate simulation execution
     - Migrate existing unit tests to still work
