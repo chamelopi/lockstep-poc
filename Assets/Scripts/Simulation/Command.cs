@@ -21,15 +21,17 @@ namespace Simulation
 
         public long TargetX;
         public long TargetY;
+        public long TargetZ;
         public long BoxX;
         public long BoxY;
+        public long BoxZ;
 
 
         public override string ToString()
         {
-            return $"Command: id={PlayerId}, turn={TargetTurn}, type={CommandType}, tx={TargetX}, ty={TargetY}, boxX={BoxX}, boxY={BoxY}, entityId={EntityId}";
+            return $"Command: id={PlayerId}, turn={TargetTurn}, type={CommandType}, tx={TargetX}, ty={TargetY}, tz={TargetZ}"
+                + $", boxX={BoxX}, boxY={BoxY}, boxZ={BoxZ}, entityId={EntityId}";
         }
-
         public string Serialize()
         {
             return JsonSerializer.Serialize(this, NetworkPacket.options);

@@ -58,6 +58,21 @@ public class InputHandler : MonoBehaviour
             }
         }
 
+        if (Input.GetMouseButtonUp(1)) {
+            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (groundPlane.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitPoint, 500f))
+            {
+                var cmd = new Command
+                {
+                    PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
+                    CommandType = CommandType.Move,
+                    TargetX = FixedPointUtil.ToFixed(hitPoint.point.x),
+                    TargetY = FixedPointUtil.ToFixed(hitPoint.point.z),
+                };
+                AddCommand(cmd);
+            }
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             isSelecting = true;
@@ -67,8 +82,6 @@ public class InputHandler : MonoBehaviour
         {
             isSelecting = false;
             var bounds = UiUtils.GetViewportBounds(selectionBeginPos, Input.mousePosition);
-
-            Debug.Log("selection bounds: " + bounds);
 
             // Left click select vs. box select
             if (Vector3.Distance(selectionBeginPos, Input.mousePosition) < 1.0f)
@@ -88,8 +101,10 @@ public class InputHandler : MonoBehaviour
                     // FIXME: Might need all three coordinates
                     TargetX = FixedPointUtil.ToFixed(bounds.center.x),
                     TargetY = FixedPointUtil.ToFixed(bounds.center.y),
+                    TargetZ = FixedPointUtil.ToFixed(bounds.center.z),
                     BoxX = FixedPointUtil.ToFixed(bounds.size.x),
                     BoxY = FixedPointUtil.ToFixed(bounds.size.y),
+                    BoxZ = FixedPointUtil.ToFixed(bounds.size.z),
                 };
                 AddCommand(cmd);
             }
@@ -124,7 +139,6 @@ public class InputHandler : MonoBehaviour
                 AddCommand(cmd);
                 hit = true;
 
-                Debug.Log($"New command: selected entity {entity.EntityId}");
                 // Select only one entity this way
                 break;
             }

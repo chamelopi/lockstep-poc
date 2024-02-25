@@ -38,15 +38,13 @@ namespace Simulation
         {
             currentState.SelectedEntities.Clear();
 
-            int count = 0;
             foreach (var (id, entity) in currentState.Entities)
             {
                 if (entity.OwningPlayer == MenuUi.networkManager.GetLocalPlayer())
                 {
-                    // FIXME: Bounds are not correct
                     // We do the check in view space because that is easier since we don't have to consider the perspective projection.
-                    var pos = new Vector3(FixedPointUtil.FromFixed(command.TargetX), FixedPointUtil.FromFixed(command.TargetY), 0f);
-                    var size = new Vector3(FixedPointUtil.FromFixed(command.BoxX), FixedPointUtil.FromFixed(command.TargetY), 100f);
+                    var pos = new Vector3(FixedPointUtil.FromFixed(command.TargetX), FixedPointUtil.FromFixed(command.TargetY), FixedPointUtil.FromFixed(command.TargetZ));
+                    var size = new Vector3(FixedPointUtil.FromFixed(command.BoxX), FixedPointUtil.FromFixed(command.BoxY), FixedPointUtil.FromFixed(command.BoxZ));
                     var bounds = new Bounds(pos, size);
 
                     var entityPosInViewSpace = Camera.main.WorldToViewportPoint(new Vector3(FixedPointUtil.FromFixed(entity.X), FixedPointUtil.FromFixed(entity.Y), 0f));
@@ -56,7 +54,6 @@ namespace Simulation
                     }
                 }
             }
-            Debug.Log($"Selected {currentState.SelectedEntities.Count}/{count} entities!");
         }
 
         private static void HandleSelectCommand(SimulationState currentState, Command command)
@@ -72,6 +69,8 @@ namespace Simulation
 
         private static void HandleMoveCommand(SimulationState currentState, Command command)
         {
+            // TODO: Calculate center of all entities & offset of each entity to that center
+            //       then move each individual entity towards the target + offset 
             foreach (var selected in currentState.SelectedEntities)
             {
                 var affectedEntity = currentState.Entities[selected];

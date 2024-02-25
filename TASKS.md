@@ -27,10 +27,8 @@
 ## Unity
 14. Port to Unity/Integrate into Unity    
     - Migrate input handling
-      - Box select
-        - bounds check does not work yet
-      - Select
-      - Move
+      - (test in multiplayer)
     - Migrate replay storing
     - Migrate simulation execution
     - Migrate existing unit tests to still work
+      - Can we do this without relying on *unity* unit tests?
