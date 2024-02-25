@@ -44,7 +44,14 @@ namespace Simulation
                 if (entity.OwningPlayer == MenuUi.networkManager.GetLocalPlayer())
                 {
                     // FIXME: Bounds are not correct
-                    if (command.TargetX >= entity.X && command.TargetY >= entity.Y && command.BoxX <= entity.X && command.BoxY <= entity.X) {
+                    // We do the check in view space because that is easier since we don't have to consider the perspective projection.
+                    var pos = new Vector3(FixedPointUtil.FromFixed(command.TargetX), FixedPointUtil.FromFixed(command.TargetY), 0f);
+                    var size = new Vector3(FixedPointUtil.FromFixed(command.BoxX), FixedPointUtil.FromFixed(command.TargetY), 100f);
+                    var bounds = new Bounds(pos, size);
+
+                    var entityPosInViewSpace = Camera.main.WorldToViewportPoint(new Vector3(FixedPointUtil.FromFixed(entity.X), FixedPointUtil.FromFixed(entity.Y), 0f));
+                    if (bounds.Contains(entityPosInViewSpace))
+                    {
                         currentState.SelectedEntities.Add(id);
                     }
                 }

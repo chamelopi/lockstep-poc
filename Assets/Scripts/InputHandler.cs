@@ -67,17 +67,20 @@ public class InputHandler : MonoBehaviour
         {
             isSelecting = false;
             var bounds = UiUtils.GetViewportBounds(selectionBeginPos, Input.mousePosition);
+
+            Debug.Log("selection bounds: " + bounds);
+
             var cmd = new Command()
             {
                 CommandType = CommandType.BoxSelect,
                 PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
-                TargetX = FixedPointUtil.ToFixed(bounds.min.x),
-                TargetY = FixedPointUtil.ToFixed(bounds.min.z),
-                BoxX = FixedPointUtil.ToFixed(bounds.max.x),
-                BoxY = FixedPointUtil.ToFixed(bounds.max.z),
+                // FIXME: Might need all three coordinates
+                TargetX = FixedPointUtil.ToFixed(bounds.center.x),
+                TargetY = FixedPointUtil.ToFixed(bounds.center.y),
+                BoxX = FixedPointUtil.ToFixed(bounds.size.x),
+                BoxY = FixedPointUtil.ToFixed(bounds.size.y),
             };
             AddCommand(cmd);
-            Debug.Log("box select command!");
         }
 
         // TODO: Handle selection (box select/click select)
@@ -90,6 +93,17 @@ public class InputHandler : MonoBehaviour
         {
             var rect = UiUtils.GetScreenRect(selectionBeginPos, Input.mousePosition);
             UiUtils.DrawSelectionRect(rect);
+        }
+    }
+
+    void OnDrawGizmos()
+    {
+        if (isSelecting)
+        {
+            var bounds = UiUtils.GetViewportBounds(selectionBeginPos, Input.mousePosition);
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireCube(bounds.center, bounds.extents * 2);
+            Gizmos.color = Color.white;
         }
     }
 

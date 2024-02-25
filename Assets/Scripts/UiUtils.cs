@@ -60,6 +60,7 @@ public class UiUtils
     {
         var v1 = Camera.main.ScreenToViewportPoint(screenPosition1);
         var v2 = Camera.main.ScreenToViewportPoint(screenPosition2);
+
         var min = Vector3.Min(v1, v2);
         var max = Vector3.Max(v1, v2);
         min.z = Camera.main.nearClipPlane;
