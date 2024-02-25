@@ -82,7 +82,7 @@ public class InputHandler : MonoBehaviour
         if (Input.GetMouseButtonUp(0))
         {
             isSelecting = false;
-            var bounds = UiUtils.GetViewportBounds(selectionBeginPos, Input.mousePosition);
+            
 
             // Left click select vs. box select
             if (Vector3.Distance(selectionBeginPos, Input.mousePosition) < 1.0f)
@@ -95,6 +95,7 @@ public class InputHandler : MonoBehaviour
             }
             else
             {
+                var bounds = UiUtils.GetViewportBounds(selectionBeginPos, Input.mousePosition);
                 var cmd = new Command()
                 {
                     CommandType = CommandType.BoxSelect,
@@ -152,8 +153,6 @@ public class InputHandler : MonoBehaviour
                 CommandType = CommandType.Deselect,
             };
             AddCommand(cmd);
-
-            Debug.Log($"New command: deselected everything");
         }
     }
 
