@@ -25,9 +25,8 @@
 13. Use or implement a fixed point math lib
 
 ## Unity
-14. Port to Unity/Integrate into Unity    
+14. Port to Unity/Integrate into Unity
     - Migrate input handling
-      - (test in multiplayer)
     - Migrate replay storing
     - Migrate simulation execution
     - Migrate existing unit tests to still work

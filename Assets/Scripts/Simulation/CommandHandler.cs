@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace Simulation
@@ -69,11 +70,9 @@ namespace Simulation
 
         private static void HandleMoveCommand(SimulationState currentState, Command command)
         {
-            // TODO: Calculate center of all entities & offset of each entity to that center
-            //       then move each individual entity towards the target + offset 
-            foreach (var selected in currentState.SelectedEntities)
+            if (currentState.SelectedEntities.Count == 1)
             {
-                var affectedEntity = currentState.Entities[selected];
+                var affectedEntity = currentState.Entities[currentState.SelectedEntities.First()];
 
                 var dx = command.TargetX - affectedEntity.X;
                 var dy = command.TargetY - affectedEntity.Y;
@@ -87,7 +86,39 @@ namespace Simulation
                 affectedEntity.VelocityY = vy;
                 affectedEntity.Moving = true;
 
-                currentState.Entities[selected] = affectedEntity;
+                currentState.Entities[currentState.SelectedEntities.First()] = affectedEntity;
+            }
+            else
+            {
+                long centerX = (long)currentState.SelectedEntities.Select(e => currentState.Entities[e].X).Average();
+                long centerY = (long)currentState.SelectedEntities.Select(e => currentState.Entities[e].Y).Average();
+
+                foreach (var selected in currentState.SelectedEntities)
+                {
+                    var affectedEntity = currentState.Entities[selected];
+
+                    //  Calculate center of all entities & offset of each entity to that center
+                    //       then move each individual entity towards the target + offset 
+                    var offsetX = centerX - affectedEntity.X;
+                    var offsetY = centerY - affectedEntity.Y;
+
+                    var targetX = command.TargetX + offsetX;
+                    var targetY = command.TargetY + offsetY;
+
+                    var dx = targetX - affectedEntity.X;
+                    var dy = targetY - affectedEntity.Y;
+                    var dist = (long)Mathf.Sqrt(dx * dx + dy * dy);
+                    var vx = dx * PlayerSpeed / dist;
+                    var vy = dy * PlayerSpeed / dist;
+
+                    affectedEntity.TargetX = targetX;
+                    affectedEntity.TargetY = targetY;
+                    affectedEntity.VelocityX = vx;
+                    affectedEntity.VelocityY = vy;
+                    affectedEntity.Moving = true;
+
+                    currentState.Entities[selected] = affectedEntity;
+                }
             }
         }
 
@@ -106,4 +137,5 @@ namespace Simulation
     }
 
 }
+
 
