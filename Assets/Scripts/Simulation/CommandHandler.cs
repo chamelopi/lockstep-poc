@@ -44,17 +44,20 @@ namespace Simulation
         {
             currentState.SelectedEntities[command.PlayerId].Clear();
 
+            Debug.Log($"Selection box: {command.TargetX}/{command.TargetY} - {command.BoxX}/{command.BoxY}");
+
             foreach (var (id, entity) in currentState.Entities)
             {
                 if (entity.OwningPlayer == command.PlayerId)
                 {
-                    // We do the check in view space because that is easier since we don't have to consider the perspective projection.
-                    var pos = new Vector3(FixedPointUtil.FromFixed(command.TargetX), FixedPointUtil.FromFixed(command.TargetY), FixedPointUtil.FromFixed(command.TargetZ));
-                    var size = new Vector3(FixedPointUtil.FromFixed(command.BoxX), FixedPointUtil.FromFixed(command.BoxY), FixedPointUtil.FromFixed(command.BoxZ));
-                    var bounds = new Bounds(pos, size);
+                    // We do the check in screen space because that is easier since we don't have to consider the perspective projection.
+                    var entityPosInScreenSpace = Camera.main.WorldToScreenPoint(new Vector3(FixedPointUtil.FromFixed(entity.X), FixedPointUtil.FromFixed(entity.Y), 0f));
+                    var entityScreenX = FixedPointUtil.ToFixed(entityPosInScreenSpace.x);
+                    var entityScreenY = FixedPointUtil.ToFixed(entityPosInScreenSpace.y);
 
-                    var entityPosInViewSpace = Camera.main.WorldToViewportPoint(new Vector3(FixedPointUtil.FromFixed(entity.X), FixedPointUtil.FromFixed(entity.Y), 0f));
-                    if (bounds.Contains(entityPosInViewSpace))
+                    Debug.Log($"Entity pos: {entityScreenX}/{entityScreenY}");
+
+                    if (entityScreenX > command.TargetX && entityScreenX < command.BoxX && entityScreenY > command.TargetY && entityScreenY < command.BoxY);
                     {
                         currentState.SelectedEntities[command.PlayerId].Add(id);
                     }

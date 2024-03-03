@@ -1,8 +1,9 @@
 # Tasks
 
 ## Short-Term bugfixes/improvements
-1. Refactor NetworkPacket deserialization to auto-detect type & choose appropriate class
-2. On pause, send a packet to everyone to let them know about the pause
+1. Fix box select!
+2. Refactor NetworkPacket deserialization to auto-detect type & choose appropriate class
+3. On pause, send a packet to everyone to let them know about the pause
 
 ## Simulation features
 4. Implement checksum calculation for Simulation State (e.g. CRC or just a hash sum)
