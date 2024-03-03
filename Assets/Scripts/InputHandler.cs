@@ -57,6 +57,21 @@ public class InputHandler : MonoBehaviour
                 AddCommand(cmd);
             }
         }
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (groundPlane.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitPoint, 500f))
+            {
+                var cmd = new Command()
+                {
+                    CommandType = CommandType.MassSpawn,
+                    PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
+                    TargetX = FixedPointUtil.ToFixed(hitPoint.point.x),
+                    TargetY = FixedPointUtil.ToFixed(hitPoint.point.z),
+                };
+                AddCommand(cmd);
+            }
+        }
 
         if (Input.GetMouseButtonUp(1))
         {

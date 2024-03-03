@@ -29,11 +29,16 @@ namespace Simulation
                 case CommandType.BoxSelect:
                     HandleBoxSelectCommand(currentState, command);
                     break;
+                case CommandType.MassSpawn:
+                    HandleMassSpawnCommand(sim, currentState, command);
+                    break;
                 default:
                     Debug.LogError("CommandHandler: Unknown command type " + command.CommandType);
                     break;
             }
         }
+
+
 
         private static void HandleBoxSelectCommand(SimulationState currentState, Command command)
         {
@@ -135,8 +140,31 @@ namespace Simulation
             entity = currentState.SpawnEntity(entity, command.PlayerId);
             sim!.onEntitySpawn?.Invoke(entity);
         }
-    }
 
+        private static void HandleMassSpawnCommand(Simulation sim, SimulationState currentState, Command command)
+        {
+            // Have to seed here to maintain determinism - for actual random stuff in-game,
+            // we will have to initialize a separate random generator PER PLAYER inside the simulation
+            // (because we don't currently guarantee order of execution among commands within a turn, so player's commands might
+            // execute in arbitrary order. Another solution would be to sort commands by player id, too)
+            UnityEngine.Random.InitState(123);
+
+            for (int i = 0; i < 100; i++)
+            {
+                var randomPos = UnityEngine.Random.insideUnitCircle * 10;
+
+                var entity = new Entity()
+                {
+                    OwningPlayer = command.PlayerId,
+                    X = command.TargetX + FixedPointUtil.ToFixed(randomPos.x),
+                    Y = command.TargetY + FixedPointUtil.ToFixed(randomPos.y),
+                    Moving = false,
+                };
+                entity = currentState.SpawnEntity(entity, command.PlayerId);
+                sim!.onEntitySpawn?.Invoke(entity);
+            }
+        }
+    }
 }
 
 

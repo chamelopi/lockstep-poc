@@ -10,6 +10,8 @@ namespace Simulation
         BoxSelect,
         Move,
         Spawn,
+        // Debug command
+        MassSpawn,
     }
 
     public struct Command
