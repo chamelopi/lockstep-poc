@@ -112,24 +112,20 @@ public class InputHandler : MonoBehaviour
             {
                 var minPos = Vector3.Min(selectionBeginPos, Input.mousePosition);
                 var maxPos = Vector3.Max(selectionBeginPos, Input.mousePosition);
+
                 var cmd = new Command()
                 {
                     CommandType = CommandType.BoxSelect,
                     PlayerId = MenuUi.networkManager!.GetLocalPlayer(),
-                    TargetX = FixedPointUtil.ToFixed(minPos.x),
-                    TargetY = FixedPointUtil.ToFixed(minPos.y),
-                    TargetZ = FixedPointUtil.ToFixed(minPos.z),
-                    BoxX = FixedPointUtil.ToFixed(maxPos.x),
-                    BoxY = FixedPointUtil.ToFixed(maxPos.y),
-                    BoxZ = FixedPointUtil.ToFixed(maxPos.z),
+                    TargetX = (long)minPos.x,
+                    TargetY = (long)minPos.y,
+                    BoxX = (long)maxPos.x,
+                    BoxY = (long)maxPos.y,
                 };
                 AddCommand(cmd);
             }
         }
     }
-
-    // TODO: Handle selection (box select/click select)
-    // TODO: Handle move command (right click)
 
     void HandleLeftClickSelection(Vector3 hitPoint)
     {

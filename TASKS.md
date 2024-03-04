@@ -1,9 +1,8 @@
 # Tasks
 
 ## Short-Term bugfixes/improvements
-1. Fix box select!
-2. Refactor NetworkPacket deserialization to auto-detect type & choose appropriate class
-3. On pause, send a packet to everyone to let them know about the pause
+1. Refactor NetworkPacket deserialization to auto-detect type & choose appropriate class
+2. On pause, send a packet to everyone to let them know about the pause
 
 ## Simulation features
 4. Implement checksum calculation for Simulation State (e.g. CRC or just a hash sum)
@@ -30,3 +29,4 @@
     - Simulation speed adjustment (should be synced, too!)
     - Migrate existing unit tests to still work
       - Can we do this without relying on *unity* unit tests?
+    - Use DOTS for rendering (? does that help at all)

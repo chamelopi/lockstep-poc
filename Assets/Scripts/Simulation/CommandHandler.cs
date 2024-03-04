@@ -44,20 +44,18 @@ namespace Simulation
         {
             currentState.SelectedEntities[command.PlayerId].Clear();
 
-            Debug.Log($"Selection box: {command.TargetX}/{command.TargetY} - {command.BoxX}/{command.BoxY}");
+            var minPos = new Vector3(command.TargetX, command.TargetY, 0f);
+            var maxPos = new Vector3(command.BoxX, command.BoxY, 0f);
 
             foreach (var (id, entity) in currentState.Entities)
             {
                 if (entity.OwningPlayer == command.PlayerId)
                 {
                     // We do the check in screen space because that is easier since we don't have to consider the perspective projection.
-                    var entityPosInScreenSpace = Camera.main.WorldToScreenPoint(new Vector3(FixedPointUtil.FromFixed(entity.X), FixedPointUtil.FromFixed(entity.Y), 0f));
-                    var entityScreenX = FixedPointUtil.ToFixed(entityPosInScreenSpace.x);
-                    var entityScreenY = FixedPointUtil.ToFixed(entityPosInScreenSpace.y);
+                    // Always remember - entity Y is world Z!
+                    var entityPosInScreenSpace = Camera.main.WorldToScreenPoint(new Vector3(FixedPointUtil.FromFixed(entity.X), 0f, FixedPointUtil.FromFixed(entity.Y)));
 
-                    Debug.Log($"Entity pos: {entityScreenX}/{entityScreenY}");
-
-                    if (entityScreenX > command.TargetX && entityScreenX < command.BoxX && entityScreenY > command.TargetY && entityScreenY < command.BoxY);
+                    if (entityPosInScreenSpace.x >= minPos.x && entityPosInScreenSpace.x <= maxPos.x && entityPosInScreenSpace.y >= minPos.y && entityPosInScreenSpace.y <= maxPos.y)
                     {
                         currentState.SelectedEntities[command.PlayerId].Add(id);
                     }
