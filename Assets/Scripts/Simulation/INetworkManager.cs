@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 
@@ -48,6 +50,11 @@ namespace Server
          * Checks if this network manager is currently connected to a server
          */
         public bool IsConnected();
+
+        /**
+         * Returns statistics about the networking layer, like how many packets have been transmitted etc.
+         */
+        public NetworkingStats? GetStats();
 
 
         delegate void PacketHandler(NetworkPacket packet);

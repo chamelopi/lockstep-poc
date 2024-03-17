@@ -87,5 +87,10 @@ namespace Server
         {
             return false;
         }
+
+        public NetworkingStats GetStats()
+        {
+            return null;
+        }
     }
 }

@@ -2,8 +2,6 @@
 
 Proof of Concept for a lockstep simulation using ENet and C#.
 
-**CURRENTLY IN THE PROCESS OF BEING PORTED FROM RAYLIB POC TO UNITY**
-
 ## Feature list
 
 The following features are currently done:
@@ -38,7 +36,5 @@ The following features are currently done:
 
 ### Data that might be of interest for debugging/statistics and should be collected
 
-- `NetworkManager` Round trip time per peer
-- `NetworkManager` Traffic (i.e. total size of packages sent/received)
 - `Simulation` Average time to calculate a simulation step
 - `Simulation` Checksums of simulation state

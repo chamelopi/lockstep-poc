@@ -57,6 +57,9 @@ public class MenuUi : MonoBehaviour
                 statusOutText.text += "\nConnected players: " + networkManager.GetClients().Count();
                 statusOutText.text += "\nPlayerID: " + networkManager.GetLocalClient().PlayerId;
                 statusOutText.text += "\nState: " + networkManager.GetLocalClient().State;
+
+                // Print stats
+                statusOutText.text += "\n\n" + networkManager.GetStats()?.ToString();
             }
             else
             {
@@ -79,6 +82,7 @@ public class MenuUi : MonoBehaviour
 
         if (SimulationManager.sim != null)
         {
+            statusOutText.text += "\n\nSIMULATION:";
             statusOutText.text += "\nSimulation turn: " + SimulationManager.sim.currentTurn;
             statusOutText.text += "\nSimulation paused? " + SimulationManager.sim.isPaused;
             statusOutText.text += "\nSimulation entity count: " + SimulationManager.sim.currentState.Entities.Count;

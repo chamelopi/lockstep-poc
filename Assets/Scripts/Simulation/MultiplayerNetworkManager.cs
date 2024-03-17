@@ -16,6 +16,8 @@ namespace Server
         private int myPlayerId;
         public int lastTurnSignaled = -1;
 
+        public NetworkingStats stats;
+
         private MultiplayerNetworkManager(Host host, bool isServer)
         {
             ENet.Library.Initialize();
@@ -23,6 +25,7 @@ namespace Server
             this.isServer = isServer;
             this.remotePeers = new();
             this.callbacks = new();
+            this.stats = new();
         }
 
 
@@ -82,6 +85,8 @@ namespace Server
                     polled = true;
                 }
 
+                UpdateStats(netEvent.Peer);
+
                 switch (netEvent.Type)
                 {
                     case ENet.EventType.Connect:
@@ -135,6 +140,8 @@ namespace Server
                 }
             }
         }
+
+
 
         private void HandleReceivedPacket(ENet.Event netEvent)
         {
@@ -391,6 +398,23 @@ namespace Server
             {
                 return myPlayerId != 0 && remotePeers.ContainsKey(myPlayerId);
             }
+        }
+
+        /**
+         * Sync statistics from ENet to our stats object
+         */
+        private void UpdateStats(Peer peer)
+        {
+            stats.roundTripTime[peer.ID] = peer.RoundTripTime;
+            stats.packetsSent = host.PacketsReceived;
+            stats.packetsReceived = host.PacketsReceived;
+            stats.bytesSent = host.BytesSent;
+            stats.bytesReceived = host.BytesReceived;
+        }
+
+        public NetworkingStats GetStats()
+        {
+            return stats;
         }
     }
 }
