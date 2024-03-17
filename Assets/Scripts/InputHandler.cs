@@ -72,6 +72,14 @@ public class InputHandler : MonoBehaviour
                 AddCommand(cmd);
             }
         }
+        if (Input.GetKeyDown(KeyCode.H)) {
+            Debug.Log("Checking simulation determinism....");
+            sim.CheckFullDeterminism();
+        }
+        if (Input.GetKeyDown(KeyCode.P)) {
+            Debug.Log("Toggle pause");
+            sim.TogglePause();
+        }
 
         if (Input.GetMouseButtonUp(1))
         {
